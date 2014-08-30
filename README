@@ -1,16 +1,18 @@
 WWW-BetfairNG version 0.01
 ==========================
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
-
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
+ Betfair is an online betting exchange which allows registered users to interact with it                                                                                                   
+using a JSON-based API. This module provides an interface to that service which handles                                                                                                   
+the JSON exchange, taking and returning perl data structures (usually hashrefs). Although                                                                                                 
+some checking of the existence of required parameter fields is done, and a listing of the                                                                                                 
+BETFAIR DATA TYPES is provided in the perldoc , it requires a level of understanding of the 
+Betfair API which is best gained from their own documentation, available from                                                                                                                     
+https://developer.betfair.com/                                                                                                                                                         
+                                                                                                                                                                                          
+To use this library, you will need a funded Betfair account. To use the non-interactive                                                                                                   
+log in, you will also need an SSL certificate and key (in seperate files, rather than a                                                                                                   
+single .pem file), and an application key. Details of how to create or obtain these, and                                                                                                  
+how to register your certificate with Betfair are also available on the above website.   
 
 INSTALLATION
 
@@ -25,16 +27,12 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  blah blah blah
+  JSON            2.59
+  REST::Client    271
 
 COPYRIGHT AND LICENCE
-
-Put the correct copyright and licence information here.
 
 Copyright (C) 2014 by Myrddin Wyllt
 
 This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.18.1 or,
-at your option, any later version of Perl 5 you may have available.
-
-
+it under the same terms as Perl itself.

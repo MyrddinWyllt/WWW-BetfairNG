@@ -1,18 +1,22 @@
 WWW-BetfairNG version 0.01
 ==========================
 
- Betfair is an online betting exchange which allows registered users to interact with it                                                                                                   
-using a JSON-based API. This module provides an interface to that service which handles                                                                                                   
-the JSON exchange, taking and returning perl data structures (usually hashrefs). Although                                                                                                 
-some checking of the existence of required parameter fields is done, and a listing of the                                                                                                 
-BETFAIR DATA TYPES is provided in the perldoc , it requires a level of understanding of the 
-Betfair API which is best gained from their own documentation, available from                                                                                                                     
-https://developer.betfair.com/                                                                                                                                                         
+Betfair is an online betting exchange which allows registered users to
+interact with it using a JSON-based API. This module provides an
+interface to that service which handles the JSON exchange, taking and
+returning perl data structures (usually hashrefs). Although some
+checking of the existence of required parameter fields is done, and a
+listing of the BETFAIR DATA TYPES is provided in the perldoc , it
+requires a level of understanding of the Betfair API which is best
+gained from their own documentation, available from
+https://developer.betfair.com/
                                                                                                                                                                                           
-To use this library, you will need a funded Betfair account. To use the non-interactive                                                                                                   
-log in, you will also need an SSL certificate and key (in seperate files, rather than a                                                                                                   
-single .pem file), and an application key. Details of how to create or obtain these, and                                                                                                  
-how to register your certificate with Betfair are also available on the above website.   
+To use this library, you will need a funded Betfair account. To use
+the non-interactive log in, you will also need an SSL certificate and
+key (in seperate files, rather than a single .pem file), and an
+application key. Details of how to create or obtain these, and how to
+register your certificate with Betfair are also available on the above
+website.
 
 INSTALLATION
 
@@ -27,8 +31,8 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  JSON            2.59
-  REST::Client    271
+  JSON            (version 2.59 or above)
+  REST::Client    (version 271  or above)
 
 COPYRIGHT AND LICENCE
 

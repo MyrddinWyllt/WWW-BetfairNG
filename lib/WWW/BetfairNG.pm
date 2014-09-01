@@ -5,6 +5,13 @@ use JSON;
 use REST::Client;
 use Carp qw /croak/;
 
+# Define Betfair Endpoints
+use constant BF_BETTING_ENDPOINT => 'https://api.betfair.com/exchange/betting/rest/v1';
+use constant BF_LOGIN_ENDPOINT   => 'https://identitysso.betfair.com/api/certlogin';
+use constant BF_LOGOUT_ENDPOINT  => 'https://identitysso.betfair.com/api/logout';
+use constant BF_KPALIVE_ENDPOINT => 'https://identitysso.betfair.com/api/keepAlive';
+use constant BF_ACCOUNT_ENDPOINT => 'https://api.betfair.com/exchange/account/rest/v1.0';
+
 =head1 NAME
 
 WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
@@ -102,11 +109,12 @@ sub new {
     # Create a REST::Client object to do all the heavy lifting
     my $client = REST::Client->new;
     # Set defaults for betting API requests - overridden by login, logout etc.
-    $client->setHost('https://api.betfair.com/exchange/betting/rest/v1');
+    $client->setHost(BF_BETTING_ENDPOINT);
     $client->addHeader('Content-Type',    'application/json');
     $client->addHeader('Accept',          'application/json');
     $client->addHeader('Connection',      'Keep-Alive');
     $client->addHeader('Accept-Encoding', 'gzip');
+    $client->addHeader('User-Agent', "WWW::BetfairNG/$VERSION");
     $obj->{client} = $client;
     return $obj;
 }
@@ -300,11 +308,12 @@ sub login {
   my $saved_client  = $self->{client};
   my $client  = REST::Client->new;
   # Set login-specific headers
-  $client->setHost('https://identitysso.betfair.com/api/certlogin');
+  $client->setHost(BF_LOGIN_ENDPOINT);
   $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
   $client->addHeader('X-Application', $self->app_key);
   $client->addHeader('Connection',   'Keep-Alive');
   $client->addHeader('Accept-Encoding', 'gzip');
+  $client->addHeader('User-Agent', "WWW::BetfairNG/$VERSION");
   $client->setCert($self->ssl_cert);
   $client->setKey($self->ssl_key);
   $self->{client} = $client;
@@ -339,7 +348,7 @@ encountered.
 sub logout {
   my $self = shift;
   my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost('https://identitysso.betfair.com/api/logout');
+  $self->{client}->setHost(BF_LOGOUT_ENDPOINT);
   $self->{client}->addHeader('Connection', 'Close');
   $self->{client}->GET('/');
   $self->{client}->addHeader('Connection', 'Keep-Alive');
@@ -373,7 +382,7 @@ it has to be done explicitly with a 'keepAlive'. Returns '1' if the keepAlive su
 sub keepAlive {
   my $self = shift;
   my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost('https://identitysso.betfair.com/api/keepAlive');
+  $self->{client}->setHost(BF_KPALIVE_ENDPOINT);
   $self->{client}->GET('/');
   unless ($self->{client}->responseCode == 200) {
     $self->{error}  = $self->{client}->{_res}->status_line;
@@ -1170,7 +1179,7 @@ sub createDeveloperAppKeys {
     return 0;
   }
   my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost('https://api.betfair.com/exchange/account/rest/v1.0');
+  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
   my $url = '/createDeveloperAppKeys/';
   my $result = $self->_callAPI($url, $params);
   $self->{client}->setHost($saved_host);
@@ -1201,7 +1210,7 @@ sub getAccountDetails {
   my $self = shift;
   my $params = {};
   my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost('https://api.betfair.com/exchange/account/rest/v1.0');
+  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
   my $url = '/getAccountDetails/';
   my $result = $self->_callAPI($url, $params);
   $self->{client}->setHost($saved_host);
@@ -1229,7 +1238,7 @@ sub getAccountFunds {
   my $self = shift;
   my $params = {};
   my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost('https://api.betfair.com/exchange/account/rest/v1.0');
+  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
   my $url = '/getAccountFunds/';
   my $result = $self->_callAPI($url, $params);
   $self->{client}->setHost($saved_host);
@@ -1252,7 +1261,7 @@ sub getDeveloperAppKeys {
   my $self = shift;
   my $params = {};
   my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost('https://api.betfair.com/exchange/account/rest/v1.0');
+  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
   my $url = '/getDeveloperAppKeys/';
   my $result = $self->_callAPI($url, $params);
   $self->{client}->setHost($saved_host);
@@ -1289,7 +1298,7 @@ sub getAccountStatement {
     return 0;
   }
   my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost('https://api.betfair.com/exchange/account/rest/v1.0');
+  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
   my $url = '/getAccountStatement/';
   my $result = $self->_callAPI($url, $params);
   $self->{client}->setHost($saved_host);
@@ -1320,7 +1329,7 @@ sub listCurrencyRates {
     return 0;
   }
   my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost('https://api.betfair.com/exchange/account/rest/v1.0');
+  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
   my $url = '/listCurrencyRates/';
   my $result = $self->_callAPI($url, $params);
   $self->{client}->setHost($saved_host);

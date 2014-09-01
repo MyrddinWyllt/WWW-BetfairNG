@@ -17,7 +17,7 @@ key (in seperate files, rather than a single .pem file), and an
 application key. Details of how to create or obtain these, and how to
 register your certificate with Betfair are also available on the above
 website. An interactive log in method is available which does not
-require an SSL certificate, although Betfair strongly reccomend that
+require an SSL certificate, although Betfair strongly recommend that
 unattended bots use the non-interactive version.
 
 INSTALLATION

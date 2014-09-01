@@ -8,6 +8,7 @@ WriteMakefile(
     AUTHOR         => 'Myrddin Wyllt <myrddinwyllt@tiscali.co.uk>',
     VERSION_FROM   => 'lib/WWW/BetfairNG.pm',
     ABSTRACT_FROM  => 'lib/WWW/BetfairNG.pm',
+    LICENSE        => 'perl',
     PREREQ_PM      => {
 	'JSON'         => 2.59,
 	'REST::Client' => 271,

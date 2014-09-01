@@ -19,11 +19,11 @@ WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -350,7 +350,7 @@ sub login {
 
 Logs in to the application using the supplied username and password. This method doesn't
 use SSL certificates, so it will work without setting those up. However, Betfair STRONGLY
-RECCOMEND that unattended bots use the non-interactive login ($bf->login()). Returns '1'
+RECOMMEND that unattended bots use the non-interactive login ($bf->login()). Returns '1'
 if the login succeeded, '0' if any errors were encountered.
 
 =cut

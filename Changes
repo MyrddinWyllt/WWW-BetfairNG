@@ -1,5 +1,8 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.02  Mon Sep 01 17:12:00 2014
+        - Added interactive login so SSL certificates are no longer necessary.
+
 0.01  Mon Aug 18 16:34:55 2014
 	- original version; created by h2xs 1.23 with options
 		-X -n WWW::BetfairNG

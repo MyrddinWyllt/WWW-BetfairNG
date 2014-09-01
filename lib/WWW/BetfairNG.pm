@@ -114,7 +114,7 @@ sub new {
     $client->addHeader('Accept',          'application/json');
     $client->addHeader('Connection',      'Keep-Alive');
     $client->addHeader('Accept-Encoding', 'gzip');
-    $client->addHeader('User-Agent', "WWW::BetfairNG/$VERSION");
+    $client->addHeader('User-Agent',      "WWW::BetfairNG/$VERSION");
     $obj->{client} = $client;
     return $obj;
 }
@@ -309,11 +309,11 @@ sub login {
   my $client  = REST::Client->new;
   # Set login-specific headers
   $client->setHost(BF_LOGIN_ENDPOINT);
-  $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
-  $client->addHeader('X-Application', $self->app_key);
-  $client->addHeader('Connection',   'Keep-Alive');
+  $client->addHeader('Content-Type',    'application/x-www-form-urlencoded');
+  $client->addHeader('X-Application',    $self->app_key);
+  $client->addHeader('Connection',      'Keep-Alive');
   $client->addHeader('Accept-Encoding', 'gzip');
-  $client->addHeader('User-Agent', "WWW::BetfairNG/$VERSION");
+  $client->addHeader('User-Agent',      "WWW::BetfairNG/$VERSION");
   $client->setCert($self->ssl_cert);
   $client->setKey($self->ssl_key);
   $self->{client} = $client;
@@ -351,7 +351,6 @@ sub logout {
   $self->{client}->setHost(BF_LOGOUT_ENDPOINT);
   $self->{client}->addHeader('Connection', 'Close');
   $self->{client}->GET('/');
-  $self->{client}->addHeader('Connection', 'Keep-Alive');
   unless ($self->{client}->responseCode == 200) {
     $self->{error}  = $self->{client}->{_res}->status_line;
     $self->{client}->setHost($saved_host);

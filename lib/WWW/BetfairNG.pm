@@ -7,7 +7,8 @@ use Carp qw /croak/;
 
 # Define Betfair Endpoints
 use constant BF_BETTING_ENDPOINT => 'https://api.betfair.com/exchange/betting/rest/v1';
-use constant BF_LOGIN_ENDPOINT   => 'https://identitysso.betfair.com/api/certlogin';
+use constant BF_C_LOGIN_ENDPOINT => 'https://identitysso.betfair.com/api/certlogin';
+use constant BF_LOGIN_ENDPOINT   => 'https://identitysso.betfair.com/api/login';
 use constant BF_LOGOUT_ENDPOINT  => 'https://identitysso.betfair.com/api/logout';
 use constant BF_KPALIVE_ENDPOINT => 'https://identitysso.betfair.com/api/keepAlive';
 use constant BF_ACCOUNT_ENDPOINT => 'https://api.betfair.com/exchange/account/rest/v1.0';
@@ -49,10 +50,13 @@ BETFAIR DATA TYPES is provided below, it requires a level of understanding of th
 API which is best gained from their own documentation, available from
 L<https://developer.betfair.com/>
 
-To use this library, you will need a funded Betfair account. To use the non-interactive
-log in, you will also need an SSL certificate and key (in seperate files, rather than a
-single .pem file), and an application key. Details of how to create or obtain these, and
-how to register your certificate with Betfair are also available on the above website.
+To use this library, you will need a funded Betfair account and an application key. To use
+the non-interactive log in, you will also need an SSL certificate and key (in seperate
+files, rather than a single .pem file). Details of how to create or obtain these, and how
+to register your certificate with Betfair are also available on the above website. The
+interactive login does not require an SSL certificate or key and is therefore easier to
+set up, but Betfair strongly recommend that unattended bots use the non-interactive
+version.
 
 =head1 METHODS
 
@@ -74,7 +78,7 @@ and key files. (These may also be set after instantiation via the accessors desc
 below, but in any case the ssl cert and key need to be present for a successful
 non-interactive login). The application key is required for most of the API calls, but not
 for login/logout or 'getDeveloperAppKeys', so if necessary the key can be retrieved from
-Betfair and then passed to the object using $bf->app_key. If interactive login is not
+Betfair and then passed to the object using $bf->app_key. You can also 
 possible for some reason, but an active session token can be obtained by other means, this
 may also be passed to the new object using {session => <session token value>}.
 
@@ -187,7 +191,7 @@ sub app_key {
 
 Gets or sets the current Session Token. Contains '' if logged out. Normally this is set
 automatically at login and after keepAlive, and unset at logout, but it can be set by hand
-if non-interactive (certificate-based) login is unavailable for any reason.
+if necessary.
 
 =cut
 
@@ -273,6 +277,8 @@ $bf->response().
 
 =head3 login({username => 'username', password => 'password'})
 
+  my $return_value = $bf->login({username => 'username', password => 'password'});
+
 Logs in to the application using the supplied username and password. For a successful
 login, 'ssl_cert' and 'ssl_key' must already be set. Returns '1' if the login succeeded,
 '0' if any errors were encountered.
@@ -308,7 +314,7 @@ sub login {
   my $saved_client  = $self->{client};
   my $client  = REST::Client->new;
   # Set login-specific headers
-  $client->setHost(BF_LOGIN_ENDPOINT);
+  $client->setHost(BF_C_LOGIN_ENDPOINT);
   $client->addHeader('Content-Type',    'application/x-www-form-urlencoded');
   $client->addHeader('X-Application',    $self->app_key);
   $client->addHeader('Connection',      'Keep-Alive');
@@ -337,8 +343,61 @@ sub login {
   return 1;
 }
 
+=head3 interactiveLogin({{username => 'username', password => 'password'}})
+
+  my $return_value = $bf->interactiveLogin({username => 'username',
+                                            password => 'password'});
+
+Logs in to the application using the supplied username and password. This method doesn't
+use SSL certificates, so it will work without setting those up. However, Betfair STRONGLY
+RECCOMEND that unattended bots use the non-interactive login ($bf->login()). Returns '1'
+if the login succeeded, '0' if any errors were encountered.
+
+=cut
+
+sub interactiveLogin {
+  my $self = shift;
+  unless (@_) {
+    $self->{error} = 'Username and Password Required';
+    return 0;
+  }
+  my $params = shift;
+  unless(ref($params) eq 'HASH') {
+    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
+    return 0;
+  }
+  unless ($params->{username} and $params->{password}) {
+    $self->{error} = 'Username and Password Required';
+    return 0;
+  }
+  my $saved_host = $self->{client}->getHost;
+  $self->{client}->setHost(BF_LOGIN_ENDPOINT);
+  $self->{client}->addHeader('Content-Type', 'application/x-www-form-urlencoded');
+  my $content = 'username='.$params->{username}.'&password='.$params->{password};
+  $self->{client}->POST('/', $content);
+  unless ($self->{client}->responseCode == 200) {
+    $self->{error}  = $self->{client}->{_res}->status_line;
+    $self->{client}->setHost($saved_host);
+    $self->{client}->addHeader('Content-Type', 'application/json');
+    return 0;
+  }
+  $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  unless ($self->{response}->{status} eq 'SUCCESS') {
+    $self->{error}  = $self->{response}->{error};
+    $self->{client}->setHost($saved_host);
+    $self->{client}->addHeader('Content-Type', 'application/json');
+    return 0;
+  }
+  # Swap the standard host back in
+  $self->{client}->setHost($saved_host);
+  $self->{client}->addHeader('Content-Type', 'application/json');
+  $self->session($self->{response}->{token});
+  return 1;
+}
 
 =head3 logout()
+
+  my $return_value = $bf->logout();
 
 Logs out of the application. Returns '1' if the logout succeeded,'0' if any errors were
 encountered.
@@ -368,8 +427,9 @@ sub logout {
   return 1;
 }
 
-
 =head3 keepAlive()
+
+  my $return_value = $bf->keepAlive();
 
 Sends a 'Keep Alive' message to the host. Without this, the session will time out after
 about twelve hours. Unlike the SOAP interface, other API calls do NOT reset the timeout;

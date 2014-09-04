@@ -1,78 +1,61 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Net::Ping;
-use Test::More tests => 25;
+use Test::More tests => 26;
+
+# Tests of session methods NOT requiring internet connection
+# ==========================================================
 
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
-
-
-my $p = Net::Ping->new();
-print STDERR "The world has NOT ended.\n" if $p->ping('www.bbc.co.uk');
-$p->close();
-
-
-$SIG{ALRM} = \&timed_out;
-eval {
-    alarm (5);
-    my $buf = <>;
-    alarm(0);           # Cancel the pending alarm if user responds.
-};
-if ($@ =~ /GOT TIRED OF WAITING/) {
-    print "Timed out. Proceeding with default\n";
-  }
-
-sub timed_out {
-    die "GOT TIRED OF WAITING";
-  }
-
-
-
 # Create Object w/o attributes
-ok(my $bf = WWW::BetfairNG->new(),   'CREATE New $bf Object');
+my $bf = new_ok('WWW::BetfairNG');
+# Check all session methods exist
+my @methods = qw/login interactiveLogin logout keepAlive/;
+can_ok('WWW::BetfairNG', @methods);
 # Test interactiveLogin
-is($bf->interactiveLogin(), 0,               "InteractiveLogin fails with no parameters");
+ok(!$bf->interactiveLogin(),                 "InteractiveLogin fails with no parameters");
 is($bf->error(), "Username and Password Required", "No parameter error message OK");
-is($bf->interactiveLogin(username=>'username', password=>'password'), 0,
+ok(!$bf->interactiveLogin(username=>'username', password=>'password'),
                                              "InteractiveLogin fails with no hashref");
 is($bf->error(), "Parameters must be a hash ref or anonymous hash",
                                              "Not a hash error message OK");
-is($bf->interactiveLogin({username=>'username', passwurd=>'password'}), 0,
-                                             "InteractiveLogin fails with bad keys");
+ok(!$bf->interactiveLogin({username=>'username', passwurd=>'password'}),
+                                             "InteractiveLogin fails with bad params");
 is($bf->error(), "Username and Password Required",
-                                             "Bad key error message OK");
-is($bf->interactiveLogin({username=>'username'}), 0,
-                                             "InteractiveLogin fails with missing keys");
+                                             "Bad params error message OK");
+ok(!$bf->interactiveLogin({username=>'username'}),
+                                             "InteractiveLogin fails with missing params");
 is($bf->error(), "Username and Password Required",
-                                             "Missing key error message OK");
-is($bf->interactiveLogin({username=>'username', password=>'password'}), 0,
-                                             "InteractiveLogin fails with no app key");
-is($bf->error(), "INPUT_VALIDATION_ERROR",
-                                              "No app key error message OK");
-is($bf->app_key( 'appkey'), 'appkey',         "SET app_key");
-is($bf->interactiveLogin({username=>'username', password=>'password'}), 0,
-                                              "InteractiveLogin fails with bad password");
-is($bf->error(), "INVALID_USERNAME_OR_PASSWORD",
-                                              "Bad password error message OK");
-
-
+                                             "Missing params error message OK");
 # Test login
-is($bf->login(), 0,                                "Login fails with no parameters");
+ok(!$bf->login(),                                  "Login fails with no parameters");
 is($bf->error(), "Username and Password Required", "No parameter error message OK");
-is($bf->login(username=>'username', password=>'password'), 0,
+ok(!$bf->login(username=>'username', password=>'password'),
                                                    "Login fails with no hashref");
 is($bf->error(), "Parameters must be a hash ref or anonymous hash",
                                                    "Not a hash error message OK");
-is($bf->login({username=>'username', passwurd=>'password'}), 0,
-                                                   "Login fails with bad keys");
+ok(!$bf->login({username=>'username', passwurd=>'password'}),
+                                                   "Login fails with bad params");
 is($bf->error(), "Username and Password Required",
-                                                   "Bad key error message OK");
-is($bf->login({username=>'username'}), 0,
-                                                   "Login fails with missing keys");
+                                                   "Bad params error message OK");
+ok(!$bf->login({username=>'username'}),
+                                                   "Login fails with missing params");
 is($bf->error(), "Username and Password Required",
-                                                   "Missing key error message OK");
-is($bf->login({username=>'username', password=>'password'}), 0,
+                                                   "Missing params error message OK");
+ok(!$bf->login({username=>'username', password=>'password'}),
                                                    "Login fails with no cert");
 is($bf->error(), "SSL Client Certificate Required",
                                                    "No cert error message OK");
+is($bf->ssl_cert('certfile'), 'certfile',          "Cert file added");
+ok(!$bf->login({username=>'username', password=>'password'}),
+                                                   "Login fails with no ssl key");
+is($bf->error(), "SSL Client Key Required",
+                                                   "No ssl key error message OK");
+is($bf->ssl_key('keyfile'), 'keyfile',             "SSL key file added");
+eval {
+  $bf->login({username=>'username', password=>'password'});
+};
+like($@, qr/REST::Client exception: Cannot read /, "Check invalid key and cert files");
+# Test logout
+# Test keepAlive

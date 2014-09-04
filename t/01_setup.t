@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use Test::More tests => 52;
 
+# Tests the setup and accessor methods
+#=====================================
+
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
 # Create Object w/o attributes

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 26;
+use Test::More tests => 37;
 
 # Tests of session methods NOT requiring internet connection
 # ==========================================================
@@ -58,4 +58,15 @@ eval {
 };
 like($@, qr/REST::Client exception: Cannot read /, "Check invalid key and cert files");
 # Test logout
+ok(!$bf->logout(),                                 "Logout fails with no session");
+is($bf->error(), "Not logged in",                  "No session error message OK");
+is($bf->session('session_token'), 'session_token', "Set session token");
+ok(!$bf->logout(),                                 "Logout fails with no app key");
+is($bf->error(), "No application key set",         "No app key error message OK");
 # Test keepAlive
+is($bf->session(undef), undef,                     "Unset session token");
+ok(!$bf->keepAlive(),                              "keepAlive fails with no session");
+is($bf->error(), "Not logged in",                  "No session error message OK");
+is($bf->session('session_token'), 'session_token', "Set session token");
+ok(!$bf->keepAlive(),                              "keepAlive fails with no app key");
+is($bf->error(), "No application key set",         "No app key error message OK");

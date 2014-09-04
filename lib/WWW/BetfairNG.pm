@@ -408,6 +408,14 @@ encountered.
 
 sub logout {
   my $self = shift;
+  unless ($self->session){
+    $self->{error} = 'Not logged in';
+    return 0;
+  }
+  unless ($self->app_key){
+    $self->{error} = 'No application key set';
+    return 0;
+  }
   my $saved_host = $self->{client}->getHost;
   $self->{client}->setHost(BF_LOGOUT_ENDPOINT);
   $self->{client}->addHeader('Connection', 'Close');
@@ -442,6 +450,14 @@ it has to be done explicitly with a 'keepAlive'. Returns '1' if the keepAlive su
 
 sub keepAlive {
   my $self = shift;
+  unless ($self->session){
+    $self->{error} = 'Not logged in';
+    return 0;
+  }
+  unless ($self->app_key){
+    $self->{error} = 'No application key set';
+    return 0;
+  }
   my $saved_host = $self->{client}->getHost;
   $self->{client}->setHost(BF_KPALIVE_ENDPOINT);
   $self->{client}->GET('/');
@@ -1403,6 +1419,14 @@ sub listCurrencyRates {
 
 sub _callAPI {
   my ($self, $url, $params) = @_;
+  unless ($self->session){
+    $self->{error} = 'Not logged in';
+    return 0;
+  }
+  unless ($self->app_key){
+    $self->{error} = 'No application key set';
+    return 0;
+  }
   $self->{client}->POST($url, encode_json($params));
   unless ($self->{client}->responseCode == 200) {
     if ($self->{client}->responseCode == 400) {

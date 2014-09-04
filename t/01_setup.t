@@ -6,7 +6,7 @@ use Test::More tests => 52;
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
 # Create Object w/o attributes
-ok(my $bf = WWW::BetfairNG->new(),   'CREATE New $bf Object');
+my $bf = new_ok('WWW::BetfairNG');
 # Test typos don't autoload
 eval {
   $bf->someCall();
@@ -41,7 +41,7 @@ is($bf->app_key(),   undef,          'CHECK UNSET app_key');
 is($bf->session(),   undef,          'CHECK UNSET session');
 #Test Read-only attributes
 is($bf->error(),               'OK', 'CHECK error OK');
-is(ref($bf->response()),     'HASH', 'CHECK response exists');
+isa_ok($bf->response(),'HASH');
 is(keys %{$bf->response()},       0, 'CHECK response is empty');
 is($bf->error('TEST_STRING'),  'OK', "CHECK error can't be SET");
 is(keys %{$bf->response({t=>1})}, 0, "CHECK response can't be SET");

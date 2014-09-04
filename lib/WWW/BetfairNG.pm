@@ -114,6 +114,7 @@ sub new {
     my $client = REST::Client->new;
     # Set defaults for betting API requests - overridden by login, logout etc.
     $client->setHost(BF_BETTING_ENDPOINT);
+    $client->setTimeout(5);
     $client->addHeader('Content-Type',    'application/json');
     $client->addHeader('Accept',          'application/json');
     $client->addHeader('Connection',      'Keep-Alive');
@@ -315,6 +316,7 @@ sub login {
   my $client  = REST::Client->new;
   # Set login-specific headers
   $client->setHost(BF_C_LOGIN_ENDPOINT);
+  $client->setTimeout(5);
   $client->addHeader('Content-Type',    'application/x-www-form-urlencoded');
   $client->addHeader('X-Application',    $self->app_key);
   $client->addHeader('Connection',      'Keep-Alive');

@@ -2,77 +2,165 @@
 use strict;
 use warnings;
 use Net::Ping;
-use Test::More tests => 25;
+use Test::More tests => 48;
 
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
 
-
-my $p = Net::Ping->new();
-print STDERR "The world has NOT ended.\n" if $p->ping('www.bbc.co.uk');
-$p->close();
-
-
+# Check if we can use the internet
+my $continue = 1;
 $SIG{ALRM} = \&timed_out;
 eval {
-    alarm (5);
+    alarm (10);
+    print STDERR
+<<EOF
+
+
+============================================================================
+NOTE:  These tests require a connection to the internet and will communicate
+with the online gambling site 'Betfair'. Answer 'N' within 10 seconds if you
+DO NOT wish to perform these tests.
+============================================================================
+EOF
+;
+    print STDERR "Connect to internet? [Y/n]: ";
     my $buf = <>;
-    alarm(0);           # Cancel the pending alarm if user responds.
+    $continue = 0 if $buf =~ m/^[nN]/;
+    alarm(0);                   # Cancel the pending alarm if user responds.
 };
-if ($@ =~ /GOT TIRED OF WAITING/) {
-    print "Timed out. Proceeding with default\n";
+# Check for connection even if we get permission
+if ($continue){
+  my $p = Net::Ping->new();
+  $continue = 0 unless $p->ping('www.bbc.co.uk');
+  $p->close();
+}
+
+SKIP: {
+  skip "these tests will not be performed", 47 unless $continue;
+  # Create Object w/o attributes
+  ok(my $bf = WWW::BetfairNG->new(),   'CREATE New $bf Object');
+  my %methods = (
+  listCompetitions         => ['MarketFilter'],
+  listCountries            => ['MarketFilter'],
+  listCurrentOrders        => [],
+  listClearedOrders        => ['BetStatus'],
+  listEvents               => ['MarketFilter'],
+  listEventTypes           => ['MarketFilter'],
+  listMarketBook           => ['MarketIds'],
+  listMarketCatalogue      => ['MarketFilter', 'MaxResults'],
+  listMarketProfitAndLoss  => ['MarketIds'],
+  listMarketTypes          => ['MarketFilter'],
+  listTimeRanges           => ['MarketFilter', 'TimeGranularity'],
+  listVenues               => ['MarketFilter'],
+  placeOrders              => ['MarketId', 'PlaceInstructions'],
+  cancelOrders             => [],
+  replaceOrders            => ['MarketId', 'ReplaceInstructions'],
+  updateOrders             => ['MarketId', 'UpdateInstructions'],
+  createDeveloperAppKeys   => ['AppName'],
+  getAccountDetails        => [],
+  getAccountFunds          => [],
+  getDeveloperAppKeys      => [],
+  getAccountStatement      => [],
+  listCurrencyRates        => [],
+  );
+  my %param_data = (
+  MarketFilter        => {
+			  name   => 'filter',
+			  value  => {},
+			  errstr => 'Market Filter is Required'
+			 },
+  BetStatus           => {
+			  name   => 'betStatus',
+			  value  => 'SETTLED',
+			  errstr => 'Bet Status is Required'
+			 },
+  MarketIds           => {
+			  name   => 'marketIds',
+			  value  => ['1.111111'],
+			  errstr => 'Market Ids are Required'
+			 },
+  MaxResults          => {
+			  name   => 'maxResults',
+			  value  => '1',
+			  errstr => 'maxResults is Required'
+			 },
+  TimeGranularity     => {
+			  name   => 'granularity',
+			  value  => 'DAYS',
+			  errstr => 'Time Granularity is Required'
+			 },
+  MarketId            => {
+			  name   => 'marketId',
+			  value  => '1.111111',
+			  errstr => 'Market Id is Required'
+			 },
+  PlaceInstructions   => {
+			  name   => 'instructions',
+			  value  => [
+				     {
+				      selectionId => "6666666",
+				      handicap    => "0",
+				      side        => "BACK",
+				      orderType   => "LIMIT",
+				      limitOrder  => {
+						      size => "0.01",
+						      price => "1000",
+						      persistenceType => "LAPSE"
+						     }
+				     }
+				    ],
+			  errstr => 'Order Instructions are Required'
+			 },
+  ReplaceInstructions => {
+			  name   => 'instructions',
+			  value  => [
+				     {
+				      selectionId => "6666666",
+				      newPrice    => "500"
+				     }
+				    ],
+			  errstr => 'Replace Instructions are Required'
+			 },
+  UpdateInstructions  => {
+			  name   => 'instructions',
+			  value  => [
+				     {
+				      selectionId => "6666666",
+		               newPersistenceType => "LAPSE"
+				     }
+				    ],
+			  errstr => 'Update Instructions are Required'
+			 },
+  AppName             => {
+			  name   => 'appName',
+			  value  => 'App Name',
+			  errstr => 'App Name is Required'
+			 }
+   );
+  is($bf->session('session_token'), 'session_token', "Set session token");
+  is($bf->app_key('app_key'),       'app_key',       "Set app key");
+  foreach my $method (keys %methods) {
+    my $params = {};
+    foreach my $required_param (@{$methods{$method}}) {
+      my $pkey = $param_data{$required_param}{name};
+      my $pval = $param_data{$required_param}{value};
+      $params->{$pkey} = $pval;
+    }
+    ok(!$bf->$method($params), "Call $method");
+    if (grep {$_ eq $method} qw/listCountries placeOrders listEventTypes listVenues
+			       listEvents listCurrentOrders listMarketBook
+			       listMarketProfitAndLoss
+			       listCompetitions listClearedOrders cancelOrders
+			       listMarketTypes listTimeRanges listMarketCatalogue/) {
+      like($bf->error, qr/^INVALID_/,      "Bad app key or session error message");
+    }
+    else {
+      is($bf->error, "400 Bad Request", "bad request error message");
+    }
   }
+}
+
 
 sub timed_out {
-    die "GOT TIRED OF WAITING";
-  }
-
-
-
-# Create Object w/o attributes
-ok(my $bf = WWW::BetfairNG->new(),   'CREATE New $bf Object');
-# Test interactiveLogin
-is($bf->interactiveLogin(), 0,               "InteractiveLogin fails with no parameters");
-is($bf->error(), "Username and Password Required", "No parameter error message OK");
-is($bf->interactiveLogin(username=>'username', password=>'password'), 0,
-                                             "InteractiveLogin fails with no hashref");
-is($bf->error(), "Parameters must be a hash ref or anonymous hash",
-                                             "Not a hash error message OK");
-is($bf->interactiveLogin({username=>'username', passwurd=>'password'}), 0,
-                                             "InteractiveLogin fails with bad keys");
-is($bf->error(), "Username and Password Required",
-                                             "Bad key error message OK");
-is($bf->interactiveLogin({username=>'username'}), 0,
-                                             "InteractiveLogin fails with missing keys");
-is($bf->error(), "Username and Password Required",
-                                             "Missing key error message OK");
-is($bf->interactiveLogin({username=>'username', password=>'password'}), 0,
-                                             "InteractiveLogin fails with no app key");
-is($bf->error(), "INPUT_VALIDATION_ERROR",
-                                              "No app key error message OK");
-is($bf->app_key( 'appkey'), 'appkey',         "SET app_key");
-is($bf->interactiveLogin({username=>'username', password=>'password'}), 0,
-                                              "InteractiveLogin fails with bad password");
-is($bf->error(), "INVALID_USERNAME_OR_PASSWORD",
-                                              "Bad password error message OK");
-
-
-# Test login
-is($bf->login(), 0,                                "Login fails with no parameters");
-is($bf->error(), "Username and Password Required", "No parameter error message OK");
-is($bf->login(username=>'username', password=>'password'), 0,
-                                                   "Login fails with no hashref");
-is($bf->error(), "Parameters must be a hash ref or anonymous hash",
-                                                   "Not a hash error message OK");
-is($bf->login({username=>'username', passwurd=>'password'}), 0,
-                                                   "Login fails with bad keys");
-is($bf->error(), "Username and Password Required",
-                                                   "Bad key error message OK");
-is($bf->login({username=>'username'}), 0,
-                                                   "Login fails with missing keys");
-is($bf->error(), "Username and Password Required",
-                                                   "Missing key error message OK");
-is($bf->login({username=>'username', password=>'password'}), 0,
-                                                   "Login fails with no cert");
-is($bf->error(), "SSL Client Certificate Required",
-                                                   "No cert error message OK");
+  die "TIMER EXPIRED";
+}

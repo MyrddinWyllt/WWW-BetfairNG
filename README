@@ -35,6 +35,7 @@ This module requires these other modules and libraries:
 
   JSON            (version 2.59 or above)
   REST::Client    (version 271  or above)
+  Term::ReadKey   (version 2.31 or above)
 
 COPYRIGHT AND LICENCE
 

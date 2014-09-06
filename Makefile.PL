@@ -10,7 +10,8 @@ WriteMakefile(
     ABSTRACT_FROM  => 'lib/WWW/BetfairNG.pm',
     LICENSE        => "perl_5",
     PREREQ_PM      => {
-	'JSON'         => 2.59,
-	'REST::Client' => 271,
+	'JSON'          => 2.59,
+	'REST::Client'  => 271,
+        'Term::ReadKey' => 2.31,
     },
 );

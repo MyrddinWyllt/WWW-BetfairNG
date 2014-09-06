@@ -373,10 +373,13 @@ sub interactiveLogin {
     return 0;
   }
   my $saved_host = $self->{client}->getHost;
+  my $got_app_key = $self->app_key;
+  $self->app_key('login') unless $got_app_key;
   $self->{client}->setHost(BF_LOGIN_ENDPOINT);
   $self->{client}->addHeader('Content-Type', 'application/x-www-form-urlencoded');
   my $content = 'username='.$params->{username}.'&password='.$params->{password};
   $self->{client}->POST('/', $content);
+  $self->app_key(undef) unless $got_app_key;
   unless ($self->{client}->responseCode == 200) {
     $self->{error}  = $self->{client}->{_res}->status_line;
     $self->{client}->setHost($saved_host);
@@ -410,10 +413,6 @@ sub logout {
   my $self = shift;
   unless ($self->session){
     $self->{error} = 'Not logged in';
-    return 0;
-  }
-  unless ($self->app_key){
-    $self->{error} = 'No application key set';
     return 0;
   }
   my $saved_host = $self->{client}->getHost;
@@ -1423,7 +1422,7 @@ sub _callAPI {
     $self->{error} = 'Not logged in';
     return 0;
   }
-  unless ($self->app_key){
+  unless ($self->app_key or ($url =~ /DeveloperAppKeys/)){
     $self->{error} = 'No application key set';
     return 0;
   }

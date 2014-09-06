@@ -41,6 +41,11 @@ foreach my $method (keys %methods) {
   is($bf->error, 'Not logged in' , "$method error msg");
   is($bf->session('session_token'), 'session_token', "Set session token");
   ok(!$bf->$method($params), "Call $method");
-  is($bf->error, "No application key set", "No app key error message OK");
+  if ($method =~ /DeveloperAppKeys/) {
+    is($bf->error, "400 Bad Request", "Bad request error message OK");
+  }
+  else {
+    is($bf->error, "No application key set", "No app key error message OK");
+  }
   is($bf->session(undef), undef, "Unset session token");
 }

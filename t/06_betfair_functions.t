@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use Net::Ping;
 use Term::ReadKey;
-use Time::Piece;
 use Test::More;
 
 my $username = '';
@@ -160,11 +159,19 @@ SKIP: {
       ok(exists $bf->response->[$type]->{eventType}->{name},   "event{name}");
       ok(exists $bf->response->[$type]->{eventType}->{id},     "event{id}");
     }
-    my $start_time = gmtime() + 86400; # one day from now
+    my $start_time = time() + 86400; # one day from now in seconds
+    my ($sec,$min,$hour,$mday,$month,$year) = gmtime($start_time);
+    $year  += 1900;
+    $month += 1;
+    my $start_time_ISO = sprintf("%04s", $year )."-";
+    $start_time_ISO   .= sprintf("%02s", $month)."-";
+    $start_time_ISO   .= sprintf("%02s", $mday )."T";
+    $start_time_ISO   .= sprintf("%02s", $hour ).":";
+    $start_time_ISO   .= sprintf("%02s", $min  )."Z";
     $params = {filter => {}};
     $params->{maxResults}       = '1';
     $params->{marketProjection} = ['RUNNER_DESCRIPTION'];
-    $params->{marketStartTime}  = {from => $start_time->datetime};
+    $params->{marketStartTime}  = {from => $start_time_ISO};
     ok($bf->listMarketCatalogue($params),                      "listMarketCatalogue");
     for my $market (0..@{$bf->response}-1) {
       ok(exists $bf->response->[$market]->{marketName},        "marketName");
@@ -269,7 +276,7 @@ SKIP: {
     ok(exists $bf->response->{firstName},     		        "firstName");
     ok(exists $bf->response->{lastName},      		        "lastName");
     ok(exists $bf->response->{localeCode},    		        "localeCode");
-    ok(exists $bf->response->{region},        		        "region"); 
+    ok(exists $bf->response->{region},        		        "region");
     ok(exists $bf->response->{timezone},      		        "timezone");
     ok(exists $bf->response->{discountRate},  		        "discountRate");
     ok(exists $bf->response->{pointsBalance}, 		        "pointsBalance");

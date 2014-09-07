@@ -419,6 +419,7 @@ sub logout {
   $self->{client}->setHost(BF_LOGOUT_ENDPOINT);
   $self->{client}->addHeader('Connection', 'Close');
   $self->{client}->GET('/');
+  $self->{client}->addHeader('Connection', 'Keep-Alive');
   unless ($self->{client}->responseCode == 200) {
     $self->{error}  = $self->{client}->{_res}->status_line;
     $self->{client}->setHost($saved_host);

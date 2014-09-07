@@ -21,4 +21,4 @@ requires:
   JSON: '2.59'
   REST::Client: '271'
   Term::ReadKey: '2.31'
-version: '0.02'
+version: '0.03'

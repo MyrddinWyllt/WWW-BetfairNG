@@ -3,5 +3,10 @@ Makefile.PL
 MANIFEST
 LICENSE
 README
-t/WWW-BetfairNG.t
+t/01_setup.t
+t/02_session.t
+t/03_betting.t
+t/04_accounts.t
+t/05_betfair_errors.t
+t/06_betfair_functions.t
 lib/WWW/BetfairNG.pm

@@ -9,4 +9,5 @@ t/03_betting.t
 t/04_accounts.t
 t/05_betfair_errors.t
 t/06_betfair_functions.t
+t/07_navigation.t
 lib/WWW/BetfairNG.pm

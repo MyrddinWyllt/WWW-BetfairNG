@@ -1,5 +1,8 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.04  Tue Sep 09 01:36:00 2014
+        - Added Navigation Menu functionality
+
 0.03  Sun Sep 07 01:57:00 2014
         - Added a test suite
 

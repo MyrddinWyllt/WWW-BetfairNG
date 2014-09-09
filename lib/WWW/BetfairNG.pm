@@ -1413,6 +1413,98 @@ sub listCurrencyRates {
   return $result;
 }
 
+=head2 Navigation Data for Applications
+
+This has only one method (navigationMenu()), which retrieves the full Betfair navigation
+menu from a compressed file which is updated every five minutes.
+
+=head3 navigationMenu()
+
+  my $menu = $bf->navigationMenu()
+
+Returns a huge hash containing descriptions of all Betfair markets arranged in a tree
+structure. The root of the tree is a GROUP entity called 'ROOT', from which hang a
+number of EVENT_TYPE entities. Each of these can have a number of GROUP or EVENT
+entities as children, which in turn can have GROUP or EVENT children of their own.
+EVENTs may also have individual MARKETs as children, whereas GROUPs may not. MARKETs
+never have childen, and so are always leaf-nodes, but be aware that the same MARKET
+may appear at the end of more than one branch of the tree. This is especially true where
+RACEs are concerned; a RACE is yet another entity, which currently may only hang off the
+EVENT_TYPE identified by the id '7' and the name 'Horse Racing'. A RACE may only have
+MARKETs as children, and these will typically also appear elsewhere in the tree.
+Takes no parameters (so it's all or nothing at all).
+
+Return Value
+
+  children          Array of EVENT_TYPE
+  id                Integer (always '0' for ROOT)
+  name              String  (always 'ROOT' for ROOT)
+  type              Menu entity type (always 'GROUP' for ROOT)
+
+Menu Entity Types
+
+  EVENT_TYPE
+
+  children          Array of GROUP, EVENT and/or RACE
+  id                String, will be the same as EventType id
+  name              String, will be the same as EventType name
+  type              Menu entity type (EVENT_TYPE)
+
+
+  GROUP
+
+  children          Array of GROUP and/or EVENT
+  id                String
+  name              String
+  type              Menu entity type (GROUP)
+
+  EVENT
+
+  children          Array of GROUP, EVENT and/or MARKET
+  id                String, will be the same as Event id
+  name              String, will be the same as Event name
+  type              Menu entity type (EVENT)
+
+  RACE
+
+  children          Array of MARKET
+  id                String
+  name              String
+  type              Menu entity type (RACE)
+  startTime         Date
+  venue             String (Course name in full)
+
+  MARKET
+
+  exchangeId        String ('1' for GB & R of W, '2' for AUS)
+  id                String, will be the same as Market id
+  marketStartTime   Date
+  name              String, will be the same as Market name
+  type              Menu entity type (MARKET)
+
+=cut
+
+sub navigationMenu {
+  my $self = shift;
+  my $params = {};
+  unless ($self->session){
+    $self->{error} = 'Not logged in';
+    return 0;
+  }
+  unless ($self->app_key){
+    $self->{error} = 'No application key set';
+    return 0;
+  }
+  my $url = '/en/navigation/menu.json';
+  $self->{client}->GET($url);
+  unless ($self->{client}->responseCode == 200) {
+    $self->{error}  = $self->{client}->{_res}->status_line;
+    return 0;
+  }
+  $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  return $self->response;
+}
+
 #=================#
 # Private Methods #
 #=================#

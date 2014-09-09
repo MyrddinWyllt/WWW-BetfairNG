@@ -270,7 +270,7 @@ SKIP: {
       ok(exists $bf->response->[$venue]->{venue},               "venue");
       ok(exists $bf->response->[$venue]->{marketCount},         "marketCount");
     }
-    # createDeveloperAppKeys NOT TESTED
+    # createDeveloperAppKeys NOT TESTED (getDeveloperAppKeys tested at start of script)
     ok($bf->getAccountDetails(),                                "getAccountDetails");
     ok(exists $bf->response->{currencyCode},    		"currencyCode");
     ok(exists $bf->response->{firstName},     		        "firstName");
@@ -305,6 +305,38 @@ SKIP: {
     for my $item (0..@{$bf->response}-1) {
       ok(exists $bf->response->[$item]->{currencyCode},         "currencyCode");
       ok(exists $bf->response->[$item]->{rate},                 "rate");
+    }
+    # Won't do the whole navigation menu, just Horse Racing RACES and child markets
+    ok($bf->navigationMenu(),                                   "navigation Menu");
+    is($bf->response->{id},       '0',                          "id = '0'");
+    is($bf->response->{name},     'ROOT',                       "name = 'ROOT'");
+    is($bf->response->{type},     'GROUP',                      "type = GROUP");
+    ok(exists $bf->response->{children},                        "children");
+    foreach my $event_type (@{$bf->response->{children}}) {
+      ok(exists $event_type->{id},                              "id");
+      ok(exists $event_type->{name},                            "name");
+      is($event_type->{type},     'EVENT_TYPE',                 "type = 'EVENT_TYPE'");
+      ok(exists $event_type->{children},                        "children");
+      if ($event_type->{id} eq '7') {    # Horse Racing
+	is($event_type->{name},           'Horse Racing',       "name = 'Horse Racing'");
+	foreach my $child (@{$event_type->{children}}) {
+	  if ($child->{type} eq 'RACE') {
+	    ok(exists $child->{id},                             "id");
+	    ok(exists $child->{name},                           "name");
+	    ok(exists $child->{startTime},                      "startTime");
+	    my $startTime = $child->{startTime};
+	    ok(exists $child->{venue},                          "venue");
+	    ok(exists $child->{children},                       "children");
+	    foreach my $market (@{$child->{children}}) {
+	      ok(exists $market->{id},                          "id");
+	      ok(exists $market->{exchangeId},                  "exchangeId");
+	      ok(exists $market->{name},                        "name");
+	      is($market->{type},        'MARKET',              "type = 'MARKET'");
+	      is($market->{marketStartTime}, $startTime,        "Start times agree");
+	    }
+	  }
+	}
+      }
     }
     ok($bf->logout(),                                           "Log out");
   }

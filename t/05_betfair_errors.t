@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Net::Ping;
 use Term::ReadKey;
-use Test::More tests => 48;
+use Test::More tests => 50;
 
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
@@ -38,7 +38,7 @@ if ($continue){
 }
 
 SKIP: {
-  skip "these tests will not be performed", 47 unless $continue;
+  skip "these tests will not be performed", 49 unless $continue;
   # Create Object w/o attributes
   ok(my $bf = WWW::BetfairNG->new(),   'CREATE New $bf Object');
   my %methods = (
@@ -64,6 +64,7 @@ SKIP: {
   getDeveloperAppKeys      => [],
   getAccountStatement      => [],
   listCurrencyRates        => [],
+  navigationMenu           => [],
   );
   my %param_data = (
   MarketFilter        => {

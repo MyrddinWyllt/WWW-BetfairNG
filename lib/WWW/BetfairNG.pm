@@ -78,9 +78,10 @@ and key files. (These may also be set after instantiation via the accessors desc
 below, but in any case the ssl cert and key need to be present for a successful
 non-interactive login). The application key is required for most of the API calls, but not
 for login/logout or 'getDeveloperAppKeys', so if necessary the key can be retrieved from
-Betfair and then passed to the object using $bf->app_key. You can also 
-possible for some reason, but an active session token can be obtained by other means, this
-may also be passed to the new object using {session => <session token value>}.
+Betfair and then passed to the object using $bf->app_key. If logging in is not possible
+for some reason, but an active session token can be obtained by other means, this may also
+be passed to the new object using {session => <session token value>}; the object will then
+behave as if it were logged in.
 
 =cut
 
@@ -345,7 +346,7 @@ sub login {
   return 1;
 }
 
-=head3 interactiveLogin({{username => 'username', password => 'password'}})
+=head3 interactiveLogin({username => 'username', password => 'password'})
 
   my $return_value = $bf->interactiveLogin({username => 'username',
                                             password => 'password'});
@@ -1776,6 +1777,8 @@ Enumeration
   TIMEOUT     Action Timed out.
 
 =head3 ItemClass
+
+Enumeration
 
   UNKNOWN     Statement item not mapped to a specific class.
 

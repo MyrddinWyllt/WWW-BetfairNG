@@ -94,6 +94,7 @@ SKIP: {
                                                               "Log in");
  SKIP: {
     skip $bf->error, 1 unless $logged_in;
+    $bf->createDeveloperAppKeys($username);
     ok($bf->getDeveloperAppKeys(),                            "Get Keys");
     foreach my $version (@{$bf->response->[0]{appVersions}}) {
       if ($version->{delayData}) {

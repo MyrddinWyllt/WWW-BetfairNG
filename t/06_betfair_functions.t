@@ -307,6 +307,7 @@ SKIP: {
       ok(exists $bf->response->[$item]->{currencyCode},         "currencyCode");
       ok(exists $bf->response->[$item]->{rate},                 "rate");
     }
+    # Won't test transferFunds - on very dodgy ground moving other people's money
     # Won't do the whole navigation menu, just Horse Racing RACES and child markets
     ok($bf->navigationMenu(),                                   "navigation Menu");
     is($bf->response->{id},       '0',                          "id = '0'");

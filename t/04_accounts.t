@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 41;
+use Test::More tests => 53;
 
 # Tests of accounts methods NOT requiring internet connection
 # ===========================================================
@@ -18,15 +18,31 @@ my %methods = (
   getDeveloperAppKeys    => [],
   getAccountStatement    => [],
   listCurrencyRates      => [],
+  transferFunds          => ['FromWallet', 'ToWallet', 'Amount'],
 );
 can_ok('WWW::BetfairNG', keys %methods);
 # Check required parameters
 my %param_data = (
-  AppName => {
-	      name   => 'appName',
-	      value  => 'App Name',
-	      errstr => 'App Name is Required'
-	     }
+  AppName    => {
+		 name   => 'appName',
+		 value  => 'App Name',
+		 errstr => 'App Name is Required'
+	        },
+  FromWallet => {
+		 name   => 'from',
+		 value  => 'UK',
+		 errstr => 'from Wallet is Required'
+	        },
+  ToWallet   => {
+		 name   => 'to',
+		 value  => 'Australian',
+		 errstr => 'to Wallet is Required'
+	        },
+  Amount     => {
+		 name   => 'amount',
+		 value  => '5.00',
+		 errstr => 'amount is Required'
+	        },
 );
 foreach my $method (keys %methods) {
   my $params = {};

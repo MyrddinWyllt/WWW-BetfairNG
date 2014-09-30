@@ -1,5 +1,14 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.05  Tue Sep 30 23:59:00 2014
+        - Made changes for API release on Mon Sep 29
+	  - Australian Wallet operations - getAccountFunds & transferFunds 
+            - This will enable API-NG users to view the Australian wallet 
+              balance & transfer funds between UK and AUS wallets.
+          - Navigation Data For Applications 
+            - Update to include new data fields countryCode, 
+              marketType & numberofWinners.
+
 0.04  Tue Sep 09 01:36:00 2014
         - Added Navigation Menu functionality
 

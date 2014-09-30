@@ -19,11 +19,11 @@ WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -577,7 +577,7 @@ fromRecord and recordCount parameters.
 Parameters
 
   betIds            Array of Strings    OPT
-  MarketIds         Array of Strings    OPT
+  marketIds         Array of Strings    OPT
   orderProjection   OrderProjection     OPT
   dateRange         TimeRange           OPT
   orderBy           OrderBy             OPT
@@ -1297,9 +1297,15 @@ sub getAccountDetails {
 
 =head3 getAccountFunds()
 
-  my $return_value = getAccountFunds();
+  my $return_value = getAccountFunds([$parameters]);
 
-Get available to bet amount. Takes no parameters.
+Get available to bet amount. The getAccounts service will return the
+UK wallet balance by default from either the UK or AUS Accounts API
+endpoint if the wallet parameter is not specified.
+
+Parameters
+
+  wallet            Wallet    OPT
 
 Return Value
 
@@ -1337,7 +1343,11 @@ Return Value
 
 sub getDeveloperAppKeys {
   my $self = shift;
-  my $params = {};
+  my $params = shift || {};
+  unless(ref($params) eq 'HASH') {
+    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
+    return 0;
+  }
   my $saved_host = $self->{client}->getHost;
   $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
   my $url = '/getDeveloperAppKeys/';
@@ -1414,6 +1424,59 @@ sub listCurrencyRates {
   return $result;
 }
 
+=head3 transferFunds($parameters)
+
+  my $return_value = transferFunds({from   => 'UK',
+                                    to     => 'AUSTRALIAN',
+                                    amount => <amount> });
+
+Transfer funds between the UK Exchange and Australian Exchange
+wallets. You require funds in the Australian Exchange wallet to bet on
+Australian markets.
+
+Parameters
+
+  from              Wallet    RQD
+  to                Wallet    RQD
+  amount            Double    RQD
+
+Return Value
+
+  transactionId     String
+
+=cut
+
+sub transferFunds {
+  my $self = shift;
+  unless (@_) {
+    $self->{error} = 'from Wallet is Required';
+    return 0;
+  }
+  my $params = shift;
+  unless(ref($params) eq 'HASH') {
+    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
+    return 0;
+  }
+  unless ($params->{from}) {
+    $self->{error} = 'from Wallet is Required';
+    return 0;
+  }
+  unless ($params->{to}) {
+    $self->{error} = 'to Wallet is Required';
+    return 0;
+  }
+  unless ($params->{amount}) {
+    $self->{error} = 'amount is Required';
+    return 0;
+  }
+  my $saved_host = $self->{client}->getHost;
+  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
+  my $url = '/listCurrencyRates/';
+  my $result = $self->_callAPI($url, $params);
+  $self->{client}->setHost($saved_host);
+  return $result;
+}
+
 =head2 Navigation Data for Applications
 
 This has only one method (navigationMenu()), which retrieves the full Betfair navigation
@@ -1464,15 +1527,17 @@ Menu Entity Types
   children          Array of GROUP, EVENT and/or MARKET
   id                String, will be the same as Event id
   name              String, will be the same as Event name
+  countryCode       ISO 3166 2-Character Country Code
   type              Menu entity type (EVENT)
 
   RACE
 
-  children          Array of MARKET
+  children          Array of MARKET7B
   id                String
   name              String
   type              Menu entity type (RACE)
   startTime         Date
+  countryCode       ISO 3166 2-Character Country Code
   venue             String (Course name in full)
 
   MARKET
@@ -1480,6 +1545,8 @@ Menu Entity Types
   exchangeId        String ('1' for GB & R of W, '2' for AUS)
   id                String, will be the same as Market id
   marketStartTime   Date
+  marketType        MarketType (e.g. 'WIN', 'PLACE')
+  numberOfWinners   No. of winners (used in 'PLACE' markets)
   name              String, will be the same as Market name
   type              Menu entity type (MARKET)
 

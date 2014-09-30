@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Net::Ping;
 use Term::ReadKey;
-use Test::More tests => 50;
+use Test::More tests => 52;
 
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
@@ -38,7 +38,7 @@ if ($continue){
 }
 
 SKIP: {
-  skip "these tests will not be performed", 49 unless $continue;
+  skip "these tests will not be performed", 51 unless $continue;
   # Create Object w/o attributes
   ok(my $bf = WWW::BetfairNG->new(),   'CREATE New $bf Object');
   my %methods = (
@@ -64,6 +64,7 @@ SKIP: {
   getDeveloperAppKeys      => [],
   getAccountStatement      => [],
   listCurrencyRates        => [],
+  transferFunds            => ['FromWallet', 'ToWallet', 'Amount'],
   navigationMenu           => [],
   );
   my %param_data = (
@@ -138,7 +139,22 @@ SKIP: {
 			  name   => 'appName',
 			  value  => 'App Name',
 			  errstr => 'App Name is Required'
-			 }
+			 },
+  FromWallet          => {
+			  name   => 'from',
+			  value  => 'UK',
+			  errstr => 'from Wallet is Required'
+	                 },
+  ToWallet            => {
+			  name   => 'to',
+			  value  => 'Australian',
+			  errstr => 'to Wallet is Required'
+	                 },
+  Amount              => {
+			  name   => 'amount',
+			  value  => '5.00',
+			  errstr => 'amount is Required'
+	                 },
    );
   is($bf->session('session_token'), 'session_token', "Set session token");
   is($bf->app_key('app_key'),       'app_key',       "Set app key");

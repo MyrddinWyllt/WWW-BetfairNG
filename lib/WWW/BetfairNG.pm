@@ -1532,7 +1532,7 @@ Menu Entity Types
 
   RACE
 
-  children          Array of MARKET7B
+  children          Array of MARKET
   id                String
   name              String
   type              Menu entity type (RACE)

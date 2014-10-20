@@ -1,17 +1,18 @@
 package WWW::BetfairNG;
 use strict;
 use warnings;
-use JSON;
-use REST::Client;
+use HTTP::Tiny;
+use JSON::MaybeXS;
+use IO::Uncompress::Gunzip qw/gunzip $GunzipError/;
 use Carp qw /croak/;
 
 # Define Betfair Endpoints
-use constant BF_BETTING_ENDPOINT => 'https://api.betfair.com/exchange/betting/rest/v1';
-use constant BF_C_LOGIN_ENDPOINT => 'https://identitysso.betfair.com/api/certlogin';
-use constant BF_LOGIN_ENDPOINT   => 'https://identitysso.betfair.com/api/login';
-use constant BF_LOGOUT_ENDPOINT  => 'https://identitysso.betfair.com/api/logout';
-use constant BF_KPALIVE_ENDPOINT => 'https://identitysso.betfair.com/api/keepAlive';
-use constant BF_ACCOUNT_ENDPOINT => 'https://api.betfair.com/exchange/account/rest/v1.0';
+use constant BF_BETTING_ENDPOINT => 'https://api.betfair.com/exchange/betting/rest/v1/';
+use constant BF_C_LOGIN_ENDPOINT => 'https://identitysso.betfair.com/api/certlogin/';
+use constant BF_LOGIN_ENDPOINT   => 'https://identitysso.betfair.com/api/login/';
+use constant BF_LOGOUT_ENDPOINT  => 'https://identitysso.betfair.com/api/logout/';
+use constant BF_KPALIVE_ENDPOINT => 'https://identitysso.betfair.com/api/keepAlive/';
+use constant BF_ACCOUNT_ENDPOINT => 'https://api.betfair.com/exchange/account/rest/v1.0/';
 
 =head1 NAME
 
@@ -19,11 +20,11 @@ WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 
@@ -110,18 +111,17 @@ sub new {
     # set non-configurable attributes
     $self->{error}    = 'OK',
     $self->{response} = {};
+    # Create an HTTP::Tiny object to do all the heavy lifting
+    my $client = HTTP::Tiny->new(
+       timeout         => 5,
+       agent           => "WWW::BetfairNG/$VERSION",
+       verify_SSL      => 1,
+       default_headers => {'Content-Type'    => 'application/json',
+			   'Accept'          => 'application/json',
+			   'Accept-Encoding' => 'gzip'
+			  });
+    $self->{client}   = $client;
     my $obj = bless $self, $class;
-    # Create a REST::Client object to do all the heavy lifting
-    my $client = REST::Client->new;
-    # Set defaults for betting API requests - overridden by login, logout etc.
-    $client->setHost(BF_BETTING_ENDPOINT);
-    $client->setTimeout(5);
-    $client->addHeader('Content-Type',    'application/json');
-    $client->addHeader('Accept',          'application/json');
-    $client->addHeader('Connection',      'Keep-Alive');
-    $client->addHeader('Accept-Encoding', 'gzip');
-    $client->addHeader('User-Agent',      "WWW::BetfairNG/$VERSION");
-    $obj->{client} = $client;
     return $obj;
 }
 
@@ -181,7 +181,6 @@ sub app_key {
   my $self = shift;
   if (@_) {
     $self->{app_key} = shift;
-    $self->{client}->addHeader('X-Application', $self->{app_key});
   }
   return $self->{app_key};
 }
@@ -201,7 +200,6 @@ sub session {
   my $self = shift;
   if (@_){
     $self->{session} = shift;
-    $self->{client}->addHeader('X-Authentication', $self->{session});
   }
   return $self->{session};
 }
@@ -312,36 +310,32 @@ sub login {
     $self->{error} = 'SSL Client Key Required';
     return 0;
   }
-  # Stash the standard client and swap it for a login version
-  my $saved_client  = $self->{client};
-  my $client  = REST::Client->new;
-  # Set login-specific headers
-  $client->setHost(BF_C_LOGIN_ENDPOINT);
-  $client->setTimeout(5);
-  $client->addHeader('Content-Type',    'application/x-www-form-urlencoded');
-  $client->addHeader('X-Application',    $self->app_key);
-  $client->addHeader('Connection',      'Keep-Alive');
-  $client->addHeader('Accept-Encoding', 'gzip');
-  $client->addHeader('User-Agent',      "WWW::BetfairNG/$VERSION");
-  $client->setCert($self->ssl_cert);
-  $client->setKey($self->ssl_key);
-  $self->{client} = $client;
-  # Make and check the request
-  my $content = 'username='.$params->{username}.'&password='.$params->{password};
-  $self->{client}->POST('/', $content);
-  unless ($self->{client}->responseCode == 200) {
-    $self->{error}  = $self->{client}->{_res}->status_line;
-    $self->{client} = $saved_client;
+  my $got_app_key  = $self->app_key;
+  $self->app_key('login') unless $got_app_key;
+  my $login_client = HTTP::Tiny->new(
+     agent           => "WWW::BetfairNG/$VERSION",
+     verify_SSL      => 1,
+     SSL_options     => {
+			 'SSL_cert_file' => $self->ssl_cert,
+			 'SSL_key_file'  => $self->ssl_key,
+			},
+     default_headers => {
+                         'X-Application' => $self->app_key,
+			 'Accept'        => 'application/json',
+			});
+  my $formdata = {username => $params->{username}, password => $params->{password}};
+  my $url      = BF_C_LOGIN_ENDPOINT;
+  my $response = $login_client->post_form($url, $formdata);
+  $self->app_key(undef) unless $got_app_key;
+  unless ($response->{success}) {
+    $self->{error}  = $response->{status}.' '.$response->{reason};
     return 0;
   }
-  $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  $self->{response} = decode_json($response->{content});
   unless ($self->{response}->{loginStatus} eq 'SUCCESS') {
-    $self->{error}  = $self->{response}->{loginStatus};
-    $self->{client} = $saved_client;
+    $self->{error}  = $self->{response}->{error};
     return 0;
   }
-  # Swap the standard client back in
-  $self->{client} = $saved_client;
   $self->session($self->{response}->{sessionToken});
   return 1;
 }
@@ -373,30 +367,27 @@ sub interactiveLogin {
     $self->{error} = 'Username and Password Required';
     return 0;
   }
-  my $saved_host = $self->{client}->getHost;
-  my $got_app_key = $self->app_key;
+  my $got_app_key  = $self->app_key;
   $self->app_key('login') unless $got_app_key;
-  $self->{client}->setHost(BF_LOGIN_ENDPOINT);
-  $self->{client}->addHeader('Content-Type', 'application/x-www-form-urlencoded');
-  my $content = 'username='.$params->{username}.'&password='.$params->{password};
-  $self->{client}->POST('/', $content);
+  my $login_client = HTTP::Tiny->new(
+     agent           => "WWW::BetfairNG/$VERSION",
+     verify_SSL      => 1,
+     default_headers => {'X-Application' => $self->app_key,
+			 'Accept'        => 'application/json',
+			});
+  my $formdata = {username => $params->{username}, password => $params->{password}};
+  my $url      = BF_LOGIN_ENDPOINT;
+  my $response = $login_client->post_form($url, $formdata);
   $self->app_key(undef) unless $got_app_key;
-  unless ($self->{client}->responseCode == 200) {
-    $self->{error}  = $self->{client}->{_res}->status_line;
-    $self->{client}->setHost($saved_host);
-    $self->{client}->addHeader('Content-Type', 'application/json');
+  unless ($response->{success}) {
+    $self->{error}  = $response->{status}.' '.$response->{reason};
     return 0;
   }
-  $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  $self->{response} = decode_json($response->{content});
   unless ($self->{response}->{status} eq 'SUCCESS') {
     $self->{error}  = $self->{response}->{error};
-    $self->{client}->setHost($saved_host);
-    $self->{client}->addHeader('Content-Type', 'application/json');
     return 0;
   }
-  # Swap the standard host back in
-  $self->{client}->setHost($saved_host);
-  $self->{client}->addHeader('Content-Type', 'application/json');
   $self->session($self->{response}->{token});
   return 1;
 }
@@ -416,24 +407,26 @@ sub logout {
     $self->{error} = 'Not logged in';
     return 0;
   }
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_LOGOUT_ENDPOINT);
-  $self->{client}->addHeader('Connection', 'Close');
-  $self->{client}->GET('/');
-  $self->{client}->addHeader('Connection', 'Keep-Alive');
-  unless ($self->{client}->responseCode == 200) {
-    $self->{error}  = $self->{client}->{_res}->status_line;
-    $self->{client}->setHost($saved_host);
+  my $options = {
+		 headers => {
+			     'X-Application'    => $self->app_key,
+			     'X-Authentication' => $self->session,
+			     'Connection'       => 'Close'
+			    }
+		};
+  my $url = BF_LOGOUT_ENDPOINT;
+  my $response = $self->{client}->get($url, $options);
+  unless ($response->{success}) {
+    $self->{error}  = $response->{status}.' '.$response->{reason};
     return 0;
   }
-  $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  my $content = $self->_gunzip($response->{content});
+  return 0 unless ($content);
+  $self->{response} = decode_json($content);
   unless ($self->{response}->{status} eq 'SUCCESS') {
     $self->{error}  = $self->{response}->{error};
-    $self->{client}->setHost($saved_host);
     return 0;
   }
-  # Swap the standard host back in
-  $self->{client}->setHost($saved_host);
   $self->session('');
   return 1;
 }
@@ -459,22 +452,22 @@ sub keepAlive {
     $self->{error} = 'No application key set';
     return 0;
   }
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_KPALIVE_ENDPOINT);
-  $self->{client}->GET('/');
-  unless ($self->{client}->responseCode == 200) {
-    $self->{error}  = $self->{client}->{_res}->status_line;
-    $self->{client}->setHost($saved_host);
+
+  my $options = {headers => {'X-Application'    => $self->app_key,
+			     'X-Authentication' => $self->session}};
+  my $url = BF_KPALIVE_ENDPOINT;
+  my $response = $self->{client}->get($url, $options);
+  unless ($response->{success}) {
+    $self->{error}  = $response->{status}.' '.$response->{reason};
     return 0;
   }
-  $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  my $content = $self->_gunzip($response->{content});
+  return 0 unless ($content);
+  $self->{response} = decode_json($content);
   unless ($self->{response}->{status} eq 'SUCCESS') {
     $self->{error}  = $self->{response}->{error};
-    $self->{client}->setHost($saved_host);
     return 0;
   }
-  # Swap the standard host back in
-  $self->{client}->setHost($saved_host);
   $self->session($self->{response}->{token});
   return 1;
 }
@@ -522,7 +515,7 @@ sub listCompetitions {
     $self->{error} = 'Market Filter is Required';
     return 0;
   }
-  my $url = '/listCompetitions/';
+  my $url = BF_BETTING_ENDPOINT.'listCompetitions/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -559,7 +552,7 @@ sub listCountries {
     $self->{error} = 'Market Filter is Required';
     return 0;
   }
-  my $url = '/listCountries/';
+  my $url = BF_BETTING_ENDPOINT.'listCountries/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -599,7 +592,7 @@ sub listCurrentOrders {
     $self->{error} = 'Parameters must be a hash ref or anonymous hash';
     return 0;
   }
-  my $url = '/listCurrentOrders/';
+  my $url = BF_BETTING_ENDPOINT.'listCurrentOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -651,7 +644,7 @@ sub listClearedOrders {
     $self->{error} = 'Bet Status is Required';
     return 0;
   }
-  my $url = '/listClearedOrders/';
+  my $url = BF_BETTING_ENDPOINT.'listClearedOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -688,7 +681,7 @@ sub listEvents {
     $self->{error} = 'Market Filter is Required';
     return 0;
   }
-  my $url = '/listEvents/';
+  my $url = BF_BETTING_ENDPOINT.'listEvents/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -726,7 +719,7 @@ sub listEventTypes {
     $self->{error} = 'Market Filter is Required';
     return 0;
   }
-  my $url = '/listEventTypes/';
+  my $url = BF_BETTING_ENDPOINT.'listEventTypes/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -770,7 +763,7 @@ sub listMarketBook {
     $self->{error} = 'Market Ids are Required';
     return 0;
   }
-  my $url = '/listMarketBook/';
+  my $url = BF_BETTING_ENDPOINT.'listMarketBook/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -817,7 +810,7 @@ sub listMarketCatalogue {
     $self->{error} = 'maxResults is Required';
     return 0;
   }
-  my $url = '/listMarketCatalogue/';
+  my $url = BF_BETTING_ENDPOINT.'listMarketCatalogue/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -858,7 +851,7 @@ sub listMarketProfitAndLoss {
     $self->{error} = 'Market Ids are Required';
     return 0;
   }
-  my $url = '/listMarketProfitAndLoss/';
+  my $url = BF_BETTING_ENDPOINT.'listMarketProfitAndLoss/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -896,7 +889,7 @@ sub listMarketTypes {
     $self->{error} = 'Market Filter is Required';
     return 0;
   }
-  my $url = '/listMarketTypes/';
+  my $url = BF_BETTING_ENDPOINT.'listMarketTypes/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -938,7 +931,7 @@ sub listTimeRanges {
     $self->{error} = 'Time Granularity is Required';
     return 0;
   }
-  my $url = '/listTimeRanges/';
+  my $url = BF_BETTING_ENDPOINT.'listTimeRanges/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -977,7 +970,7 @@ sub listVenues {
     $self->{error} = 'Market Filter is Required';
     return 0;
   }
-  my $url = '/listVenues/';
+  my $url = BF_BETTING_ENDPOINT.'listVenues/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1037,7 +1030,7 @@ sub placeOrders {
     $self->{error} = 'Order Instructions are Required';
     return 0;
   }
-  my $url = '/placeOrders/';
+  my $url = BF_BETTING_ENDPOINT.'placeOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
     my $status = $result->{status};
@@ -1083,7 +1076,7 @@ sub cancelOrders {
     $self->{error} = 'Parameters must be a hash ref or anonymous hash';
     return 0;
   }
-  my $url = '/cancelOrders/';
+  my $url = BF_BETTING_ENDPOINT.'cancelOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1139,7 +1132,7 @@ sub replaceOrders {
     $self->{error} = 'Replace Instructions are Required';
     return 0;
   }
-  my $url = '/replaceOrders/';
+  my $url = BF_BETTING_ENDPOINT.'replaceOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
     my $status = $result->{status};
@@ -1200,7 +1193,7 @@ sub updateOrders {
     $self->{error} = 'Update Instructions are Required';
     return 0;
   }
-  my $url = '/updateOrders/';
+  my $url = BF_BETTING_ENDPOINT.'updateOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
     my $status = $result->{status};
@@ -1256,11 +1249,8 @@ sub createDeveloperAppKeys {
     $self->{error} = 'App Name is Required';
     return 0;
   }
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
-  my $url = '/createDeveloperAppKeys/';
+  my $url = BF_ACCOUNT_ENDPOINT.'createDeveloperAppKeys/';
   my $result = $self->_callAPI($url, $params);
-  $self->{client}->setHost($saved_host);
   return $result;
 }
 
@@ -1287,11 +1277,8 @@ Return Value
 sub getAccountDetails {
   my $self = shift;
   my $params = {};
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
-  my $url = '/getAccountDetails/';
+  my $url = BF_ACCOUNT_ENDPOINT.'getAccountDetails/';
   my $result = $self->_callAPI($url, $params);
-  $self->{client}->setHost($saved_host);
   return $result;
 }
 
@@ -1321,11 +1308,8 @@ Return Value
 sub getAccountFunds {
   my $self = shift;
   my $params = {};
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
-  my $url = '/getAccountFunds/';
+  my $url = BF_ACCOUNT_ENDPOINT.'getAccountFunds/';
   my $result = $self->_callAPI($url, $params);
-  $self->{client}->setHost($saved_host);
   return $result;
 }
 
@@ -1348,11 +1332,8 @@ sub getDeveloperAppKeys {
     $self->{error} = 'Parameters must be a hash ref or anonymous hash';
     return 0;
   }
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
-  my $url = '/getDeveloperAppKeys/';
+  my $url = BF_ACCOUNT_ENDPOINT.'getDeveloperAppKeys/';
   my $result = $self->_callAPI($url, $params);
-  $self->{client}->setHost($saved_host);
   return $result;
 }
 
@@ -1385,11 +1366,8 @@ sub getAccountStatement {
     $self->{error} = 'Parameters must be a hash ref or anonymous hash';
     return 0;
   }
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
-  my $url = '/getAccountStatement/';
+  my $url = BF_ACCOUNT_ENDPOINT.'getAccountStatement/';
   my $result = $self->_callAPI($url, $params);
-  $self->{client}->setHost($saved_host);
   return $result;
 }
 
@@ -1416,11 +1394,8 @@ sub listCurrencyRates {
     $self->{error} = 'Parameters must be a hash ref or anonymous hash';
     return 0;
   }
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
-  my $url = '/listCurrencyRates/';
+  my $url = BF_ACCOUNT_ENDPOINT.'listCurrencyRates/';
   my $result = $self->_callAPI($url, $params);
-  $self->{client}->setHost($saved_host);
   return $result;
 }
 
@@ -1469,11 +1444,8 @@ sub transferFunds {
     $self->{error} = 'amount is Required';
     return 0;
   }
-  my $saved_host = $self->{client}->getHost;
-  $self->{client}->setHost(BF_ACCOUNT_ENDPOINT);
-  my $url = '/listCurrencyRates/';
+  my $url = BF_ACCOUNT_ENDPOINT.'transferFunds/';
   my $result = $self->_callAPI($url, $params);
-  $self->{client}->setHost($saved_host);
   return $result;
 }
 
@@ -1555,6 +1527,7 @@ Menu Entity Types
 sub navigationMenu {
   my $self = shift;
   my $params = {};
+  # Can't use _callAPI because we need a 'get' not a 'post'
   unless ($self->session){
     $self->{error} = 'Not logged in';
     return 0;
@@ -1563,21 +1536,30 @@ sub navigationMenu {
     $self->{error} = 'No application key set';
     return 0;
   }
-  my $url = '/en/navigation/menu.json';
-  $self->{client}->GET($url);
-  unless ($self->{client}->responseCode == 200) {
-    $self->{error}  = $self->{client}->{_res}->status_line;
+  my $url = BF_BETTING_ENDPOINT.'en/navigation/menu.json';
+  my $options = {
+		 headers => {
+			     'X-Authentication' => $self->session,
+			     'X-Application'    => $self->app_key
+			    }
+		};
+  my $response = $self->{client}->get($url, $options);
+  unless ($response->{success}) {
+    $self->{error}  = $response->{status}.' '.$response->{reason};;
     return 0;
   }
-  $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  my $content = $self->_gunzip($response->{content});
+  return 0 unless ($content);
+  $self->{response} = decode_json($content);
   return $self->response;
 }
 
-#=================#
-# Private Methods #
-#=================#
+#===============================#
+# Private Methods and Functions #
+#===============================#
 
 sub _callAPI {
+  # Called by all API methods EXCEPT navigationMenu.
   my ($self, $url, $params) = @_;
   unless ($self->session){
     $self->{error} = 'Not logged in';
@@ -1587,20 +1569,48 @@ sub _callAPI {
     $self->{error} = 'No application key set';
     return 0;
   }
-  $self->{client}->POST($url, encode_json($params));
-  unless ($self->{client}->responseCode == 200) {
-    if ($self->{client}->responseCode == 400) {
-      $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  my $options = {
+		 headers => {
+			     'X-Authentication' => $self->session,
+			    },
+		 content => encode_json($params)
+		};
+  unless ($url =~ /DeveloperAppKeys/) {
+    $options->{headers}{'X-Application'} = $self->app_key;
+  }
+  my $response = $self->{client}->post($url, $options);
+  unless ($response->{success}) {
+    if ($response->{status} == 400) {
+      my $content = $self->_gunzip($response->{content});
+      $self->{response} = decode_json($content);
       $self->{error}  = $self->{response}->{detail}->{APINGException}->{errorCode} ||
-	$self->{client}->{_res}->status_line;
+	$response->{status}.' '.$response->{reason};
     }
     else {
-      $self->{error}  = $self->{client}->{_res}->status_line;
+      $self->{error}  = $response->{status}.' '.$response->{reason};
     }
     return 0;
   }
-  $self->{response} = decode_json($self->{client}->{_res}->decoded_content);
+  my $content = $self->_gunzip($response->{content});
+  return 0 unless ($content);
+  $self->{response} = decode_json($content);
   return $self->{response};
+}
+
+sub _gunzip {
+  my $self  = shift;
+  my $input = shift;
+  unless ($input) {
+    $self->error("gunzip failed : empty input string");
+    return 0;
+  }
+  my $output;
+  my $status = gunzip(\$input => \$output);
+  unless ($status) {
+    $self->error("gunzip failed : $GunzipError");
+    return 0;
+  }
+  return $output;
 }
 
 1;

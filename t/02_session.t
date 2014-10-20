@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 34;
+use Test::More tests => 35;
 
 # Tests of session methods NOT requiring internet connection
 # ==========================================================
@@ -53,10 +53,9 @@ ok(!$bf->login({username=>'username', password=>'password'}),
 is($bf->error(), "SSL Client Key Required",
                                                    "No ssl key error message OK");
 is($bf->ssl_key('keyfile'), 'keyfile',             "SSL key file added");
-eval {
-  $bf->login({username=>'username', password=>'password'});
-};
-like($@, qr/REST::Client exception: Cannot read /, "Check invalid key and cert files");
+ok(!$bf->login({username=>'username', password=>'password'}),
+                                        "Login fails with invalid key and cert files");
+like($@, qr/SSL_cert_file certfile does not exist/, "Check invalid key and cert files");
 # Test logout
 ok(!$bf->logout(),                                 "Logout fails with no session");
 is($bf->error(), "Not logged in",                  "No session error message OK");

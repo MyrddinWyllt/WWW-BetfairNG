@@ -10,27 +10,6 @@ BEGIN { use_ok('WWW::BetfairNG') };
 
 # Check if we can use the internet
 my $continue = 1;
-print STDERR <<EOF
-
-
-============================================================================
-NOTE:  These tests require a connection to the internet and will communicate
-with the online gambling site 'Betfair'. Answer 'N' within 10 seconds if you
-DO NOT wish to perform these tests.
-============================================================================
-
-EOF
-;
-print STDERR "Connect to internet? [Y/n]: ";
-ReadMode 'cbreak';
-my $key = ReadKey(10);
-ReadMode 'normal';
-unless ($key) {
-  $key = 'Y';
-}
-print STDERR uc($key)."\n\n";
-$continue = 0 if $key =~ m/^[nN]/;
-# Check for connection even if we get permission
 if ($continue){
   my $p = Net::Ping->new();
   $continue = 0 unless $p->ping('www.bbc.co.uk');

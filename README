@@ -1,4 +1,4 @@
-WWW-BetfairNG version 0.05
+WWW-BetfairNG version 0.06
 ==========================
 
 Betfair is an online betting exchange which allows registered users to
@@ -10,7 +10,7 @@ listing of the BETFAIR DATA TYPES is provided in the perldoc , it
 requires a level of understanding of the Betfair API which is best
 gained from their own documentation, available from
 https://developer.betfair.com/
-                                                                                                                                                                                          
+                                                                                          
 To use this library, you will need a funded Betfair account. To use
 the non-interactive log in, you will also need an SSL certificate and
 key (in seperate files, rather than a single .pem file), and an
@@ -29,13 +29,28 @@ To install this module type the following:
    make test
    make install
 
+If you wish to test live betfair functions before installation, you
+will need your login details and optionally the paths to your SSL
+certificate and key files. Replace the 'make test' line above with:
+
+  BF_LIVE_TEST=1 make test
+
+As this requires keyboard input of your username and password, you
+should not use this option in an automated test environment. This will
+test all live functions, but will not place any bets or make any
+changes to your account.
+
 DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  JSON            (version 2.59 or above)
-  REST::Client    (version 271  or above)
-  Term::ReadKey   (version 2.31 or above)
+  HTTP::Tiny
+  JSON::MaybeXS            
+  IO::Uncompress::Gunzip   
+
+To run the live test of betfair functions you will also need:
+
+  Term::ReadKey   
 
 COPYRIGHT AND LICENCE
 

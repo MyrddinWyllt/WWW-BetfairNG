@@ -1,5 +1,11 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.06  Mon Oct 20 15:45:45 2014
+        - Changed framework to use HTTP::Tiny and JSON::MaybeXS instead
+          of REST::Client and JSON, and altered test suite to use an
+          environment variable for live tests instead of prompting the
+          user.
+
 0.05  Tue Sep 30 23:59:00 2014
         - Made changes for API release on Mon Sep 29
 	  - Australian Wallet operations - getAccountFunds & transferFunds 

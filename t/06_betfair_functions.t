@@ -15,8 +15,20 @@ my $params   = {};
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
 
-# Check if we can use the internet
+# Check if we were asked to run these tests
 my $continue = 0;
+if ($ENV{BF_LIVE_TEST}) {
+  $continue = 1;
+}
+
+# Check if we can use the internet
+if ($continue){
+  my $p = Net::Ping->new();
+  $continue = 0 unless $p->ping('www.bbc.co.uk');
+  $p->close();
+}
+
+if ($continue) {
 print STDERR <<EOF
 
 
@@ -25,56 +37,42 @@ NOTE:  These tests require a connection to the internet and will communicate
 with the online gambling site 'Betfair'. They also require login credentials
 (username and password)  for an active, funded Betfair account. NO BETS WILL
 BE PLACED, but  all  functionality  which does not involve placing live bets
-will be tested. The default is NOT to run these tests; if you wish  them  to
-run, enter 'Y' at the prompt within 20 seconds.
+or altering account details will be tested.  To skip these tests, just enter 
+a blank username or password.
 ============================================================================
 
 EOF
 ;
-print STDERR "Perform these tests? [y/N]: ";
-ReadMode 'cbreak';
-my $key = ReadKey(20);
-ReadMode 'normal';
-unless ($key) {
-  $key = 'N';
-}
-print STDERR uc($key)."\n\n";
-$continue = 1 if $key =~ m/^[yY]/;
-# Check for connection even if we get permission
-if ($continue){
-  my $p = Net::Ping->new();
-  $continue = 0 unless $p->ping('www.bbc.co.uk');
-  $p->close();
-}
+
 INPUT: {
-  if ($continue) {
-    print STDERR "Username: ";
-    chomp($username = <STDIN>);
-    unless ($username){
-      $continue = 0;
-      last INPUT;
-    }
-    ReadMode 'noecho';
-    print STDERR "Password (will not echo): ";
-    chomp($password = <STDIN>);
-    print STDERR "\n";
-    ReadMode 'normal';
-    unless ($password){
-      $continue = 0;
-      last INPUT;
-    }
-    print STDERR "\nIf you wish to test SSL certificate login, please enter the path to\n";
-    print STDERR "your certificate (.crt) and key (.key) files. (The certificate must\n";
-    print STDERR "already be registered with  Betfair). If you leave this blank, only\n";
-    print STDERR "non-certificate (interactive) login will be tested.\n\n";
-    print STDERR "Path to SSL client cert file: ";
-    chomp($certfile = <STDIN>);
-    unless ($certfile){
-      last INPUT;
-    }
-    print STDERR "Path to SSL client  key file: ";
-    chomp($keyfile = <STDIN>);
+  print STDERR "\nUsername: ";
+  chomp($username = <STDIN>);
+  unless ($username){
+    $continue = 0;
+    last INPUT;
   }
+  ReadMode 'noecho';
+  print STDERR "Password (will not echo): ";
+  chomp($password = <STDIN>);
+  print STDERR "\n";
+  ReadMode 'normal';
+  unless ($password){
+    $continue = 0;
+    last INPUT;
+  }
+  print STDERR "\nIf you wish to test SSL certificate login, please enter the path to\n";
+  print STDERR "your certificate (.crt) and key (.key) files. (The certificate must\n";
+  print STDERR "already be registered with  Betfair). If you leave this blank, only\n";
+  print STDERR "non-certificate (interactive) login will be tested.\n\n";
+  print STDERR "Path to SSL client cert file: ";
+  chomp($certfile = <STDIN>);
+  unless ($certfile){
+    last INPUT;
+  }
+  print STDERR "Path to SSL client  key file: ";
+  chomp($keyfile = <STDIN>);
+}
+
 }
 
 SKIP: {

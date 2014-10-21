@@ -1,5 +1,8 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.07  Tue Oct 21 02:15:00 2014
+        - Fixed typo in META.json
+
 0.06  Mon Oct 20 15:45:45 2014
         - Changed framework to use HTTP::Tiny and JSON::MaybeXS instead
           of REST::Client and JSON, and altered test suite to use an

@@ -21,4 +21,4 @@ requires:
   HTTP::Tiny: '0'
   JSON::MaybeXS: '0'
   IO::Uncompress::Gunzip: '0'
-version: '0.06'
+version: '0.07'

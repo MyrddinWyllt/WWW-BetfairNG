@@ -33,7 +33,7 @@
       "runtime" : {
          "requires" : {
             "HTTP::Tiny" : "0",
-            "JSON::MaybeXS" : "0"
+            "JSON::MaybeXS" : "0",
             "IO::Uncompress::Gunzip" : "0"	     
          }
       }

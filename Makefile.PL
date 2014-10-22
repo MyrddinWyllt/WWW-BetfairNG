@@ -9,9 +9,18 @@ WriteMakefile(
     VERSION_FROM   => 'lib/WWW/BetfairNG.pm',
     ABSTRACT_FROM  => 'lib/WWW/BetfairNG.pm',
     LICENSE        => "perl_5",
+    CONFIGURE_REQUIRES => {
+        'ExtUtils::MakeMaker' => 0,
+    },
+    BUILD_REQUIRES => {
+        'Test::More' => 0,
+    },
     PREREQ_PM      => {
-	'HTTP::Tiny'             => 0,
-	'JSON::MaybeXS'          => 0,
-        'IO::Uncompress::Gunzip' => 0,
+        'Carp'                   => 1.26,
+	'HTTP::Tiny'             => 0.049,
+	'IO::Socket::SSL'        => 1.56,
+        'Net::SSLeay'            => 1.49,
+	'JSON::MaybeXS'          => 1.002002,
+        'IO::Uncompress::Gunzip' => 2.060,
     },
 );

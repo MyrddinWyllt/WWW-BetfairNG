@@ -1,4 +1,4 @@
-WWW-BetfairNG version 0.07
+WWW-BetfairNG version 0.08
 ==========================
 
 Betfair is an online betting exchange which allows registered users to
@@ -44,13 +44,20 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  HTTP::Tiny
-  JSON::MaybeXS            
-  IO::Uncompress::Gunzip   
+  HTTP::Tiny              0.050
+  IO::Socket::SSL         1.56
+  Net::SSLeay             1.49
+  JSON::MaybeXS           1.002005 
+  IO::Uncompress::Gunzip  2.066 
+
+If you have a C compiler and your system supports it, faster
+JSON encoding / decoding can be achieved by installing:
+
+  Cpanel::JSON::XS        3.0104
 
 To run the live test of betfair functions you will also need:
 
-  Term::ReadKey   
+  Term::ReadKey           2.30
 
 COPYRIGHT AND LICENCE
 

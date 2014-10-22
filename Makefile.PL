@@ -17,6 +17,7 @@ WriteMakefile(
     },
     PREREQ_PM      => {
         'Carp'                   => 1.26,
+	'Net::Ping'              => 0,
 	'HTTP::Tiny'             => 0.049,
 	'IO::Socket::SSL'        => 1.56,
         'Net::SSLeay'            => 1.49,

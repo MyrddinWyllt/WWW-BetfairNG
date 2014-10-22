@@ -55,9 +55,6 @@ JSON encoding / decoding can be achieved by installing:
 
   Cpanel::JSON::XS        3.0104
 
-To run the live test of betfair functions you will also need:
-
-  Term::ReadKey           2.30
 
 COPYRIGHT AND LICENCE
 

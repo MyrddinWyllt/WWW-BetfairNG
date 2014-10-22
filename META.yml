@@ -19,6 +19,7 @@ no_index:
     - inc
 requires:
   Carp: '1.26'
+  Net::Ping: '0'
   HTTP::Tiny: '0.049'
   IO::Socket::SSL: '1.56'
   IO::Uncompress::Gunzip: '2.06'

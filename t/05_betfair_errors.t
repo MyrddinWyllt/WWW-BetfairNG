@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 use Net::Ping;
-use Term::ReadKey;
 use Test::More tests => 52;
 
 # Load Module
@@ -10,14 +9,12 @@ BEGIN { use_ok('WWW::BetfairNG') };
 
 # Check if we can use the internet
 my $continue = 1;
-if ($continue){
-  my $p = Net::Ping->new();
-  $continue = 0 unless $p->ping('www.bbc.co.uk');
-  $p->close();
-}
+my $p = Net::Ping->new();
+$continue = 0 unless $p->ping('www.bbc.co.uk');
+$p->close();
 
-SKIP: {
-  skip "these tests will not be performed", 51 unless $continue;
+plan( skip_all => "No internet connection found") unless $continue;
+
   # Create Object w/o attributes
   ok(my $bf = WWW::BetfairNG->new(),   'CREATE New $bf Object');
   my %methods = (
@@ -156,4 +153,3 @@ SKIP: {
       is($bf->error, "400 Bad Request", "bad request error message");
     }
   }
-}

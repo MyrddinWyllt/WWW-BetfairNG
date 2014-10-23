@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Net::Ping;
-use Test::More tests => 52;
+use Test::More;
 
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
@@ -153,3 +153,5 @@ plan( skip_all => "No internet connection found") unless $continue;
       is($bf->error, "400 Bad Request", "bad request error message");
     }
   }
+
+done_testing();

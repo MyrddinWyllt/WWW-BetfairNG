@@ -540,19 +540,7 @@ Return Value
 
 sub listCompetitions {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{filter}) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listCompetitions/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -577,19 +565,7 @@ Return Value
 
 sub listCountries {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{filter}) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listCountries/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -626,10 +602,6 @@ Return Value
 sub listCurrentOrders {
   my $self = shift;
   my $params = shift || {};
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
   my $url = BF_BETTING_ENDPOINT.'listCurrentOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -669,19 +641,7 @@ Return Value
 
 sub listClearedOrders {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Bet Status is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{betStatus}) {
-    $self->{error} = 'Bet Status is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listClearedOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -706,19 +666,7 @@ Return Value
 
 sub listEvents {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{filter}) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listEvents/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -744,19 +692,7 @@ Return Value
 
 sub listEventTypes {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{filter}) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listEventTypes/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -788,19 +724,7 @@ Return Value
 
 sub listMarketBook {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Ids are Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{marketIds}) {
-    $self->{error} = 'Market Ids are Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listMarketBook/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -831,23 +755,7 @@ Return Value
 
 sub listMarketCatalogue {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{filter}) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  unless ($params->{maxResults}) {
-    $self->{error} = 'maxResults is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listMarketCatalogue/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -876,19 +784,7 @@ Return Value
 
 sub listMarketProfitAndLoss {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Ids are Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{marketIds}) {
-    $self->{error} = 'Market Ids are Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listMarketProfitAndLoss/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -914,19 +810,7 @@ Return Value
 
 sub listMarketTypes {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{filter}) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listMarketTypes/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -952,23 +836,7 @@ Return Value
 
 sub listTimeRanges {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{filter}) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  unless ($params->{granularity}) {
-    $self->{error} = 'Time Granularity is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listTimeRanges/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -995,19 +863,7 @@ Return Value
 
 sub listVenues {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{filter}) {
-    $self->{error} = 'Market Filter is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'listVenues/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1051,23 +907,7 @@ Return Value
 
 sub placeOrders {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Id is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{marketId}) {
-    $self->{error} = 'Market Id is Required';
-    return 0;
-  }
-  unless ($params->{instructions}) {
-    $self->{error} = 'Order Instructions are Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'placeOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
@@ -1110,10 +950,6 @@ Return Value
 sub cancelOrders {
   my $self = shift;
   my $params = shift || {};
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
   my $url = BF_BETTING_ENDPOINT.'cancelOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1153,23 +989,7 @@ Return Value
 
 sub replaceOrders {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Id is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{marketId}) {
-    $self->{error} = 'Market Id is Required';
-    return 0;
-  }
-  unless ($params->{instructions}) {
-    $self->{error} = 'Replace Instructions are Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'replaceOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
@@ -1214,23 +1034,7 @@ Return Value
 
 sub updateOrders {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'Market Id is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{marketId}) {
-    $self->{error} = 'Market Id is Required';
-    return 0;
-  }
-  unless ($params->{instructions}) {
-    $self->{error} = 'Update Instructions are Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_BETTING_ENDPOINT.'updateOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
@@ -1274,19 +1078,7 @@ Return Value
 
 sub createDeveloperAppKeys {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'App Name is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{appName}) {
-    $self->{error} = 'App Name is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_ACCOUNT_ENDPOINT.'createDeveloperAppKeys/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1314,7 +1106,7 @@ Return Value
 
 sub getAccountDetails {
   my $self = shift;
-  my $params = {};
+  my $params = shift || {};
   my $url = BF_ACCOUNT_ENDPOINT.'getAccountDetails/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1345,7 +1137,7 @@ Return Value
 
 sub getAccountFunds {
   my $self = shift;
-  my $params = {};
+  my $params = shift || {};
   my $url = BF_ACCOUNT_ENDPOINT.'getAccountFunds/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1366,10 +1158,6 @@ Return Value
 sub getDeveloperAppKeys {
   my $self = shift;
   my $params = shift || {};
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
   my $url = BF_ACCOUNT_ENDPOINT.'getDeveloperAppKeys/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1400,10 +1188,6 @@ Return Value
 sub getAccountStatement {
   my $self = shift;
   my $params = shift || {};
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
   my $url = BF_ACCOUNT_ENDPOINT.'getAccountStatement/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1428,10 +1212,6 @@ Return Value
 sub listCurrencyRates {
   my $self = shift;
   my $params = shift || {};
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
   my $url = BF_ACCOUNT_ENDPOINT.'listCurrencyRates/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1461,27 +1241,7 @@ Return Value
 
 sub transferFunds {
   my $self = shift;
-  unless (@_) {
-    $self->{error} = 'from Wallet is Required';
-    return 0;
-  }
-  my $params = shift;
-  unless(ref($params) eq 'HASH') {
-    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
-    return 0;
-  }
-  unless ($params->{from}) {
-    $self->{error} = 'from Wallet is Required';
-    return 0;
-  }
-  unless ($params->{to}) {
-    $self->{error} = 'to Wallet is Required';
-    return 0;
-  }
-  unless ($params->{amount}) {
-    $self->{error} = 'amount is Required';
-    return 0;
-  }
+  my $params = shift || {};
   my $url = BF_ACCOUNT_ENDPOINT.'transferFunds/';
   my $result = $self->_callAPI($url, $params);
   return $result;
@@ -1607,6 +1367,15 @@ sub _callAPI {
     $self->{error} = 'No application key set';
     return 0;
   }
+    unless(ref($params) eq 'HASH') {
+    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
+    return 0;
+  }
+  if ($self->check_parameters) {
+    my $caller = [caller 1]->[3];
+    $caller =~ s/^.+:://;
+    return 0 unless $self->_check_parameter($caller, $params);
+  }
   my $options = {
 		 headers => {
 			     'X-Authentication' => $self->session,
@@ -1652,11 +1421,153 @@ sub _gunzip {
 }
 
 
+sub _check_parameter {
+  my $self = shift;
+  my ($name, $parameter) = @_;
+  unless (exists $self->{data_types}{$name}) {
+    $self->{error} = "Unknown parameter '$name'";
+    return 0;
+  }
+  my $def = $self->{data_types}{$name};
+  if ($def->{type} eq 'HASH') {
+    unless (ref($parameter) eq 'HASH') {
+      $self->{error} = "Parameter '$name' should be a hashref";
+      return 0;
+    }
+    my %fields  = ((map {$_ => [1, 0]} @{$def->{required}}),
+                   (map {$_ => [0, 0]} @{$def->{allowed}}));
+    while (my ($key, $value) = each %$parameter) {
+      unless (exists $fields{$key}) {
+	$self->{error} = "Invalid parameter '$key' in '$name'";
+	return 0;
+      }
+      unless ($self->_check_parameter($key, $value)) {
+	# DON'T set error - set below
+	return 0;
+      }
+      $fields{$key}[1]++;
+    }
+    if (my @missing = grep {($fields{$_}[0] == 1) and ($fields{$_}[1] == 0)}
+                      keys %fields){
+      $self->{error}  = "The following required parameter".
+        (@missing == 1 ? " is" : "s are").
+	" missing from '$name' - ";
+      $self->{error} .= join(", ", @missing);
+      return 0;
+    }
+    if (my @repeated = grep {($fields{$_}[1] > 1)}
+                      keys %fields){
+      $self->{error}  = "The following parameter".(@repeated == 1 ? " is" : "s are").
+	" repeated in '$name' - ";
+      $self->{error} .= join(", ", @repeated);
+      return 0;
+    }
+  }
+  elsif ($def->{type} eq 'ARRAY') {
+    unless (ref($parameter) eq 'ARRAY') {
+      $self->{error} = "Parameter '$name' should be an arrayref";
+      return 0;
+    }
+    unless (@$parameter > 0) {
+      $self->{error} = "parameter '$name' can't be an empty array";
+      return 0;
+    }
+    my $key = $def->{array_of};
+    foreach my $value (@$parameter) {
+      unless ($self->_check_parameter($key, $value)) {
+	# DON'T set error - set below
+	return 0;
+      }
+    }
+  }
+  elsif ($def->{type} eq 'ENUM') {
+    if (my $type = ref($parameter)) {
+      $type = lc($type);
+      $self->{error}  = "Parameter '$name' should be a scalar, not a reference to a";
+      $self->{error} .= ($type = 'array' ? 'n ' : ' ').$type;
+      return 0;
+    }
+    unless (grep {$_ eq $parameter} @{$def->{allowed}}) {
+      $self->{error}  = "'$parameter' is not a valid value for '$name', ";
+      $self->{error} .= "valid values are - ";
+      $self->{error} .= join(", ", @{$def->{allowed}});
+    }
+  }
+  elsif ($def->{type} eq 'SCALAR') {
+    if (my $type = ref($parameter)) {
+      $type = lc($type);
+      $self->{error}  = "Parameter '$name' should be a scalar, not a reference to a";
+      $self->{error} .= ($type eq 'array' ? 'n ' : ' ').$type;
+      return 0;
+    }
+    unless ($parameter =~ $def->{allowed}) {
+      $self->{error}  = "'$parameter' is not a valid value for '$name' - ";
+      $self->{error} .= "valid values are of the form '".$def->{example}."'";
+      return 0;
+    }
+  }
+  return 1;
+}
+
 sub _load_data_types {
   my $self = shift;
 
-  return {dummy => 'change this'};
-}
+# Start with some basic data types
+  my $long = {
+    type     => 'SCALAR',
+    allowed  => qr/^\d+$/,
+    example  => '123456789'
+  };
+ my $double = {
+    type     => 'SCALAR',
+    allowed  => qr/^[\d\.]$/,
+    example  => '3.14'
+  };
+ my $integer = {
+    type     => 'SCALAR',
+    allowed  => qr/^\d+$/,
+    example  => '255'
+  };
+ my $string = {
+    type     => 'SCALAR',
+    allowed  => qr/^.+$/,
+    example  => 'Some Text'
+  };
+ my $boolean = {
+    type     => 'SCALAR',
+    allowed  => qr/^[01]$/,
+    example  => '0 or 1'
+  };
+ my $date = {
+    type     => 'SCALAR',
+    allowed  => qr/^\d\d\d\d-\d\d-\d\d[T ]\d\d:\d\dZ$/,
+    example  => '2007-04-05T14:30Z'
+  };
+
+# main type_defs hash
+  my $type_defs = {
+  Long          => $long,
+  Double        => $double,
+  Integer       => $integer,
+  String        => $string,
+  Boolean       => $boolean,
+  Date          => $date,
+# method names
+  listCompetitions => {
+		       type     => 'HASH',
+		       required => [qw/filter/],
+		       allowed  => [qw/locale/],
+		      },
+  listCountries    => {
+		       type     => 'HASH',
+		       required => [qw/filter/],
+		       allowed  => [qw/locale/],
+		      },
+  };
+
+
+
+
 
 =head1 BETFAIR DATA TYPES
 
@@ -1677,10 +1588,26 @@ Enumeration
   LAPSED      Unmatched bet that was cancelled by Betfair (for example at turn in play).
   CANCELLED   Unmatched bet that was cancelled by an explicit customer action.
 
+=cut
+
+  $type_defs->{BetStatus}  = {
+			      type     => 'ENUM',
+			      allowed  => [qw/SETTLED VOIDED LAPSED CANCELLED/],
+			     };
+
+
 =head3 CancelInstruction
 
   betId             String              RQD
   sizeReduction     Double              OPT
+
+=cut
+
+  $type_defs->{CancelInstruction}  = {
+     	       type     => 'HASH',
+               required => [qw/betId/],
+	       allowed  => [qw/sizeReduction/],
+			  };
 
 =head3 CancelInstructionReport
 
@@ -1806,6 +1733,15 @@ Enumeration
   rollupLiabilityThreshold    Double        OPT
   rollupLiabilityFactor       Integer       OPT
 
+=cut
+
+  $type_defs->{ExBestOffersOverrides}  = {
+     	       type     => 'HASH',
+               required => [qw//],
+	       allowed  => [qw/bestPricesDepth rollupModel rollupLimit
+			       rollupLiabilityThreshold rollupLiabilityFactor/],
+					 };
+
 =head3 ExchangePrices
 
   availableToBack             Array of PriceSize
@@ -1853,6 +1789,13 @@ Enumeration
   SIDE       An averaged roll up on the specified side of a specified selection.
   BET        The P&L, commission paid, side and regulatory information etc, about each individual bet order
 
+=cut
+
+  $type_defs->{GroupBy}  = {
+			    type     => 'ENUM',
+			    allowed  => [qw/EVENT_TYPE EVENT MARKET SIDE BET/],
+			   };
+
 =head3 IncludeItem
 
 Enumeration
@@ -1862,6 +1805,12 @@ Enumeration
   EXCHANGE                    Include exchange bets only.
   POKER_ROOM                  include poker transactions only.
 
+=cut
+
+  $type_defs->{IncludeItem}  = {
+		    type     => 'ENUM',
+		    allowed  => [qw/ALL DEPOSITS_WITHDRAWALS EXCHANGE POKER_ROOM/],
+			       };
 
 =head3 InstructionReportErrorCode
 
@@ -1907,11 +1856,27 @@ Enumeration
   liability         Double              REQ
   price             Double              REQ
 
+=cut
+
+  $type_defs->{LimitOnCloseOrder}  = {
+     	       type     => 'HASH',
+               required => [qw/liability price/],
+	       allowed  => [qw//],
+				     };
+
 =head3 LimitOrder
 
   size              Double              REQ
   price             Double              REQ
   persistenceType   PersistenceType     REQ
+
+=cut
+
+  $type_defs->{LimitOrder}  = {
+     	       type     => 'HASH',
+               required => [qw/size price persistenceType/],
+	       allowed  => [qw//],
+			      };
 
 =head3 MarketBettingType
 
@@ -1923,6 +1888,14 @@ Enumeration
   ASIAN_HANDICAP_DOUBLE_LINE  Asian Handicap Market.
   ASIAN_HANDICAP_SINGLE_LINE  Asian Single Line Market.
   FIXED_ODDS                  Sportsbook Odds Market.
+
+=cut
+
+  $type_defs->{MarketBettingType}  = {
+	       type     => 'ENUM',
+	       allowed  => [qw/ODDS LINE RANGE ASIAN_HANDICAP_DOUBLE_LINE
+                               ASIAN_HANDICAP_SINGLE_LINE FIXED_ODDS/],
+				     };
 
 =head3 MarketBook
 
@@ -1992,9 +1965,30 @@ Enumeration
   marketStartTime    TimeRange                    OPT
   withOrders         Array of OrderStatus         OPT
 
+=cut
+
+  $type_defs->{MarketFilter}  = {
+     	       type     => 'HASH',
+               required => [qw//],
+	       allowed  => [qw/textQuery exchangeIds eventTypeIds eventIds
+			       competitionIds marketIds venues bspOnly
+			       turnInPlayEnabled inPlayOnly marketBettingTypes
+			       marketCountries marketTypeCodes marketStartTime
+			       withOrders/],
+				};
+  $type_defs->{filter}  =  $type_defs->{MarketFilter};
+
 =head3 MarketOnCloseOrder
 
   liability          Double              REQ
+
+=cut
+
+  $type_defs->{MarketOnCloseOrder}  = {
+     	       type     => 'HASH',
+               required => [qw/liability/],
+	       allowed  => [qw//],
+				      };
 
 =head3 MarketProfitAndLoss
 
@@ -2014,6 +2008,14 @@ Enumeration
   RUNNER_DESCRIPTION If not selected then the runners will not be returned with marketCatalogue.
   RUNNER_METADATA    If not selected then the runner metadata will not be returned with marketCatalogue.
 
+=cut
+
+  $type_defs->{MarketProjection}  = {
+	       type     => 'ENUM',
+	       allowed  => [qw/COMPETITION EVENT EVENT_TYPE MARKET_START_TIME
+			       MARKET_DESCRIPTION RUNNER_DESCRIPTION RUNNER_METADATA/],
+				    };
+
 =head3 MarketSort
 
 Enumeration
@@ -2025,6 +2027,14 @@ Enumeration
   FIRST_TO_START     The closest markets based on their expected start time
   LAST_TO_START      The most distant markets based on their expected start time
 
+=cut
+
+  $type_defs->{MarketSort}  = {
+	       type     => 'ENUM',
+	       allowed  => [qw/MINIMUM_TRADED MAXIMUM_TRADED MINIMUM_AVAILABLE
+			       MAXIMUM_AVAILABLE FIRST_TO_START LAST_TO_START/],
+			      };
+
 =head3 MarketStatus
 
 Enumeration
@@ -2033,6 +2043,13 @@ Enumeration
   OPEN               Open Market
   SUSPENDED          Suspended Market
   CLOSED             Closed Market
+
+=cut
+
+  $type_defs->{MarketStatus}  = {
+	       type     => 'ENUM',
+	       allowed  => [qw/INACTIVE OPEN SUSPENDED CLOSED/],
+				};
 
 =head3 MarketTypeResult
 
@@ -2055,6 +2072,13 @@ Enumeration
   NO_ROLLUP              No rollup, return raw fragments.
   ROLLED_UP_BY_PRICE     Rollup matched amounts by distinct matched prices per side.
   ROLLED_UP_BY_AVG_PRICE Rollup matched amounts by average matched price per side.
+
+=cut
+
+  $type_defs->{MatchProjection}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/NO_ROLLUP ROLLED_UP_BY_PRICE ROLLED_UP_BY_AVG_PRICE/],
+				   };
 
 =head3 Order
 
@@ -2085,6 +2109,14 @@ Enumeration
   BY_SETTLED_TIME Order by time of last settled fragment, last match time, placed time, bet id.
   BY_VOID_TIME    Order by time of last voided fragment, last match time, placed time, bet id.
 
+=cut
+
+  $type_defs->{OrderBy}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/BY_BET BY_MARKET BY_MATCH_TIME BY_PLACE_TIME
+			       BY_SETTLED_TIME BY_VOID_TIME/],
+			   };
+
 =head3 OrderProjection
 
 Enumeration
@@ -2093,12 +2125,26 @@ Enumeration
   EXECUTABLE         An order that has a remaining unmatched portion.
   EXECUTION_COMPLETE An order that does not have any remaining unmatched portion.
 
+=cut
+
+  $type_defs->{OrderProjection}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/ALL EXECUTABLE EXECUTION_COMPLETE/],
+				   };
+
 =head3 OrderStatus
 
 Enumeration
 
   EXECUTION_COMPLETE An order that does not have any remaining unmatched portion.
   EXECUTABLE         An order that has a remaining unmatched portion.
+
+=cut
+
+  $type_defs->{OrderStatus}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/EXECUTION_COMPLETE EXECUTABLE/],
+			       };
 
 =head3 OrderType
 
@@ -2108,6 +2154,13 @@ Enumeration
   LIMIT_ON_CLOSE    Limit order for the auction (SP).
   MARKET_ON_CLOSE   Market order for the auction (SP).
 
+=cut
+
+  $type_defs->{OrderType}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/LIMIT LIMIT_ON_CLOSE MARKET_ON_CLOSE/],
+			     };
+
 =head3 PersistenceType
 
 Enumeration
@@ -2115,6 +2168,13 @@ Enumeration
   LAPSE           Lapse the order when the market is turned in-play.
   PERSIST         Persist the order to in-play.
   MARKET_ON_CLOSE Put the order into the auction (SP) at turn-in-play.
+
+=cut
+
+  $type_defs->{PersistenceType}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/LAPSE PERSIST MARKET_ON_CLOSE/],
+				   };
 
 =head3 PlaceInstruction
 
@@ -2125,6 +2185,14 @@ Enumeration
   limitOrder         LimitOrder           OPT/RQD \
   limitOnCloseOrder  LimitOnCloseOrder    OPT/RQD  > Depending on OrderType
   marketOnCloseOrder MarketOnCloseOrder   OPT/RQD /
+
+=cut
+
+  $type_defs->{PlaceInstruction}  = {
+     	       type     => 'HASH',
+               required => [qw/ordertype selectionId side/],
+	       allowed  => [qw/handicap limitOrder limitOnCloseOrder marketOnCloseOrder/],
+				    };
 
 =head3 PlaceInstructionReport
 
@@ -2146,12 +2214,28 @@ Enumeration
   EX_ALL_OFFERS     EX_ALL_OFFERS trumps EX_BEST_OFFERS if both settings are present.
   EX_TRADED         Amount traded on the exchange.
 
+=cut
+
+  $type_defs->{PriceData}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/SP_AVAILABLE SP_TRADED EX_BEST_OFFERS EX_ALL_OFFERS
+			       EX_TRADED/],
+			     };
+
 =head3 PriceProjection
 
   priceData             Array of PriceData        OPT
   exBestOffersOverrides ExBestOffersOverrides     OPT
   virtualise            Boolean                   OPT
   rolloverStakes        Boolean                   OPT
+
+=cut
+
+  $type_defs->{PriceProjection}  = {
+     	       type     => 'HASH',
+               required => [qw//],
+	       allowed  => [qw/priceData exBestOffersOverrides virtualise rolloverStakes/],
+				   };
 
 =head3 PriceSize
 
@@ -2162,6 +2246,14 @@ Enumeration
 
   betId             String              RQD
   newPrice          Double              RQD
+
+=cut
+
+  $type_defs->{ReplaceInstruction}  = {
+     	       type     => 'HASH',
+               required => [qw/betId newPrice/],
+	       allowed  => [qw//],
+			  };
 
 =head3 ReplaceInstructionReport
 
@@ -2178,6 +2270,13 @@ Enumeration
   PAYOUT            The volumes will be rolled up to the minimum value where the payout( price * volume ) is >= rollupLimit.
   MANAGED_LIABILITY The volumes will be rolled up to the minimum value which is >= rollupLimit, until a lay price threshold.
   NONE              No rollup will be applied.
+
+=cut
+
+  $type_defs->{RollupModel}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/STAKE PAYOUT MANAGED_LIABILITY NONE/],
+			       };
 
 =head3 Runner
 
@@ -2219,6 +2318,13 @@ Enumeration
   REMOVED           Removed from the market.
   HIDDEN            Hidden from the market
 
+=cut
+
+  $type_defs->{RunnerStatus}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/ACTIVE WINNER LOSER REMOVED_VACANT REMOVED HIDDEN/],
+				};
+
 =head3 Side
 
 Enumeration
@@ -2226,12 +2332,26 @@ Enumeration
   BACK  To bet on the selection to win.
   LAY   To bet on the selection to lose.
 
+=cut
+
+  $type_defs->{Side}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/BACK LAY/],
+			};
+
 =head3 SortDir
 
 Enumeration
 
   EARLIEST_TO_LATEST          Order from earliest value to latest.
   LATEST_TO_EARLIEST          Order from latest value to earliest.
+
+=cut
+
+  $type_defs->{SortDir}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/EARLIEST_TO_LATEST LATEST_TO_EARLIEST/],
+			   };
 
 =head3 StartingPrices
 
@@ -2280,10 +2400,25 @@ Enumeration
   HOURS             Hours.
   MINUTES           Minutes.
 
+=cut
+
+  $type_defs->{TimeGranularity}  = {
+     	       type     => 'ENUM',
+	       allowed  => [qw/DAYS HOURS MINUTES/],
+				   };
+
 =head3 TimeRange
 
   from              Date
   to                Date
+
+=cut
+
+  $type_defs->{TimeRange}  = {
+     	       type     => 'HASH',
+               required => [qw//],
+	       allowed  => [qw/from to/],
+			     };
 
 =head3 TimeRangeResult
 
@@ -2294,6 +2429,14 @@ Enumeration
 
   betId              String             RQD
   newPersistenceType PersistenceType    RQD
+
+=cut
+
+  $type_defs->{UpdateInstruction}  = {
+     	       type     => 'HASH',
+	       required => [qw/betId newPersistenceType/],
+	       allowed  => [qw//],
+				     };
 
 =head3 UpdateInstructionReport
 
@@ -2310,7 +2453,19 @@ Enumeration
 
 =cut
 
+  $type_defs->{Wallet}  = {
+			   type     => 'ENUM',
+			   allowed  => [qw/UK AUSTRALIAN/],
+			  };
+
+  return $type_defs;
+}
+
+
 1;
+
+
+
 
 
 =head1 SEE ALSO

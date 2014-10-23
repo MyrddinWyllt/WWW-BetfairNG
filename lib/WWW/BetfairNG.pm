@@ -109,8 +109,10 @@ sub new {
       }
     }
     # set non-configurable attributes
-    $self->{error}    = 'OK',
-    $self->{response} = {};
+    $self->{error}      = 'OK',
+    $self->{response}   = {};
+    $self->{p_check}    =  0;
+    $self->{data_types} = {};
     # Create an HTTP::Tiny object to do all the heavy lifting
     my $client = HTTP::Tiny->new(
        timeout         => 5,
@@ -202,6 +204,42 @@ sub session {
     $self->{session} = shift;
   }
   return $self->{session};
+}
+
+=head3 check_parameters()
+
+  my $check = $bf->check_parameters();
+  $bf->check_parameters('<boolean>');
+
+Gets or sets a flag telling the object whether or not it should do a
+detailed check on the validity of parameters passed to the API
+methods. If this is set, the parameter hash will be checked before it
+is sent to the API, and any errors in construction will result in the
+method call immediately returning '0' and C<< $bf->error >> being set
+to a message detailing the precise problem. Only the first error found
+will be returned, so several iterations may be necessary to fix a
+badly broken parameter hash. If the flag is not set, any parameters
+that are a valid hashref or anonymous hash will be passed straight to
+Betfair, and errors in the construction will result in a Betfair
+error, which will usually be more general (i.e. cryptic and
+unhelpful). As some parameter hashes can be quite complicated, there
+is a performance hit incurred by turning parameter checking on. For
+this reason, the default is to NOT check parameters, although you
+should turn it on during development and for debugging.
+
+=cut
+
+sub check_parameters {
+  my $self = shift;
+  if (@_){
+    my $current_state = $self->{p_check};
+    my $flag = shift;
+    $self->{p_check} = $flag ? 1 : 0;
+    unless ($self->{p_check} == $current_state) {
+      $self->{data_types} = $self->{p_check} ? $self->_load_data_types() : {};
+    }
+  }
+  return $self->{p_check};
 }
 
 =head3 error()
@@ -1613,7 +1651,12 @@ sub _gunzip {
   return $output;
 }
 
-1;
+
+sub _load_data_types {
+  my $self = shift;
+
+  return {dummy => 'change this'};
+}
 
 =head1 BETFAIR DATA TYPES
 
@@ -2264,6 +2307,11 @@ Enumeration
 
   UK                UK Exchange wallet.
   AUSTRALIAN        Australian Exchange wallet.
+
+=cut
+
+1;
+
 
 =head1 SEE ALSO
 

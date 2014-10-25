@@ -20,11 +20,11 @@ WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
 
 =head1 VERSION
 
-Version 0.08
+Version 0.09
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 SYNOPSIS
 
@@ -818,7 +818,7 @@ sub listMarketTypes {
 
 =head3 listTimeRanges($parameters)
 
-  my $return_value = $bf->listMarketTypes({filter => {}, granularity => 'DAYS'});
+  my $return_value = $bf->listTimeRanges({filter => {}, granularity => 'DAYS'});
 
 Returns a list of time ranges in the granularity specified in the request (i.e. 3PM
 to 4PM, Aug 14th to Aug 15th) associated with the markets selected by the MarketFilter.
@@ -1356,8 +1356,9 @@ sub navigationMenu {
 # Private Methods and Functions #
 #===============================#
 
+# Called by all API methods EXCEPT navigationMenu to do the talking to Betfair.
+# =============================================================================
 sub _callAPI {
-  # Called by all API methods EXCEPT navigationMenu.
   my ($self, $url, $params) = @_;
   unless ($self->session){
     $self->{error} = 'Not logged in';
@@ -1404,6 +1405,8 @@ sub _callAPI {
   return $self->{response};
 }
 
+# HTTP::Tiny doesn't have built-in decompression so we do it here
+# ===============================================================
 sub _gunzip {
   my $self  = shift;
   my $input = shift;
@@ -1420,7 +1423,8 @@ sub _gunzip {
   return $output;
 }
 
-
+# We check parameters recursively, but only when $bf->check_parameters is TRUE
+# ============================================================================
 sub _check_parameter {
   my $self = shift;
   my ($name, $parameter) = @_;
@@ -1441,8 +1445,21 @@ sub _check_parameter {
 	$self->{error} = "Invalid parameter '$key' in '$name'";
 	return 0;
       }
-      unless ($self->_check_parameter($key, $value)) {
-	# DON'T set error - set below
+      # Special cases - I hate putting these in, but if we are going to check
+      # parameters, we ought to check them properly, even if it means spoiling
+      # the abstraction of the checking subroutine. God I hate Betfair
+      my $check_key = $key;
+      if ($key eq 'instructions') {
+	my ($prefix) = $name =~ m/^(.+)Orders$/;
+	$check_key = $prefix.'Instructions';
+      }
+      if (($key eq 'from') or ($key eq 'to')) {
+	if ($name eq 'transferFunds') {
+	  $check_key = $key.'Wallet';
+	}
+      }
+      unless ($self->_check_parameter($check_key, $value)) {
+	# DON'T set error - already set recursively
 	return 0;
       }
       $fields{$key}[1]++;
@@ -1475,7 +1492,7 @@ sub _check_parameter {
     my $key = $def->{array_of};
     foreach my $value (@$parameter) {
       unless ($self->_check_parameter($key, $value)) {
-	# DON'T set error - set below
+	# DON'T set error - already set recursively
 	return 0;
       }
     }
@@ -1509,6 +1526,8 @@ sub _check_parameter {
   return 1;
 }
 
+# If $bf->check_parameters is turned ON, we load the Betfair Data Type definitions
+# ================================================================================
 sub _load_data_types {
   my $self = shift;
 
@@ -1520,7 +1539,7 @@ sub _load_data_types {
   };
  my $double = {
     type     => 'SCALAR',
-    allowed  => qr/^[\d\.]$/,
+    allowed  => qr/^[\d\.]+$/,
     example  => '3.14'
   };
  my $integer = {
@@ -1544,29 +1563,271 @@ sub _load_data_types {
     example  => '2007-04-05T14:30Z'
   };
 
+
+
 # main type_defs hash
   my $type_defs = {
-  Long          => $long,
-  Double        => $double,
-  Integer       => $integer,
-  String        => $string,
-  Boolean       => $boolean,
-  Date          => $date,
+
+# simple types
+  amount                 => $double,
+  fromRecord             => $integer,
+  recordCount            => $integer,
+  maxResults             => $integer,
+  customerRef            => $string,
+  appName                => $string,
+  textQuery              => $string,
+  venue                  => $string,
+  exchangeId             => $string, # for now, until this feature is implemented
+  marketTypeCode         => $string, # for now, until Betfair publish an Enum
+  includeItemDescription => $boolean,
+  includeSettledBets     => $boolean,
+  includeBspBets         => $boolean,
+  netOfCommission        => $boolean,
+  bspOnly                => $boolean,
+  turnInPlayEnabled      => $boolean,
+  inPlayOnly             => $boolean,
+  from                   => $date,
+  to                     => $date,
+
 # method names
-  listCompetitions => {
-		       type     => 'HASH',
-		       required => [qw/filter/],
-		       allowed  => [qw/locale/],
-		      },
-  listCountries    => {
-		       type     => 'HASH',
-		       required => [qw/filter/],
-		       allowed  => [qw/locale/],
-		      },
+  listCompetitions  => {
+		        type     => 'HASH',
+		        required => [qw/filter/],
+		        allowed  => [qw/locale/],
+		       },
+  listCountries     => {
+			type     => 'HASH',
+			required => [qw/filter/],
+			allowed  => [qw/locale/],
+		       },
+  listCurrentOrders => {
+			type     => 'HASH',
+			required => [qw//],
+			allowed  => [qw/betIds marketIds orderProjection dateRange
+					orderBy sortDir fromRecord recordCount/],
+		       },
+  listClearedOrders => {
+			type     => 'HASH',
+			required => [qw/betStatus/],
+			allowed  => [qw/eventTypeIds eventIds marketIds runnerIds
+				        betIds side settledDateRange groupBy locale
+				        includeItemDescription fromRecord recordCount/],
+		       },
+  listEvents        => {
+			type     => 'HASH',
+			required => [qw/filter/],
+			allowed  => [qw/locale/],
+		       },
+  listEventTypes    => {
+			type     => 'HASH',
+			required => [qw/filter/],
+			allowed  => [qw/locale/],
+		       },
+  listMarketBook    => {
+			type     => 'HASH',
+			required => [qw/marketIds/],
+			allowed  => [qw/priceProjection orderProjection matchProjection
+                                        currencyCode locale/],
+		       },
+  listMarketCatalogue => {
+			type     => 'HASH',
+			required => [qw/filter maxResults/],
+			allowed  => [qw/marketProjection sort locale/],
+		       },
+  listMarketProfitAndLoss => {
+			type     => 'HASH',
+			required => [qw/marketIds/],
+			allowed  => [qw/includeSettledBets includeBspBets
+                                        netOfCommission/],
+		       },
+  listMarketTypes   => {
+			type     => 'HASH',
+			required => [qw/filter/],
+			allowed  => [qw/locale/],
+		       },
+  listTimeRanges    => {
+			type     => 'HASH',
+			required => [qw/filter granularity/],
+			allowed  => [qw//],
+		       },
+  listVenues        => {
+			type     => 'HASH',
+			required => [qw/filter/],
+			allowed  => [qw/locale/],
+		       },
+  placeOrders       => {
+			type     => 'HASH',
+			required => [qw/marketId instructions/],
+			allowed  => [qw/customerRef/],
+		       },
+  cancelOrders      => {
+			type     => 'HASH',
+			required => [qw/marketId instructions/],
+			allowed  => [qw/customerRef/],
+		       },
+  replaceOrders     => {
+			type     => 'HASH',
+			required => [qw/marketId instructions/],
+			allowed  => [qw/customerRef/],
+		       },
+  updateOrders      => {
+			type     => 'HASH',
+			required => [qw/marketId instructions/],
+			allowed  => [qw/customerRef/],
+		       },
+  createDeveloperAppKeys => {
+			type     => 'HASH',
+			required => [qw/appName/],
+			allowed  => [qw//],
+		       },
+  getAccountDetails => {
+			type     => 'HASH',
+			required => [qw//],
+			allowed  => [qw//],
+		       },
+  getAccountFunds   => {
+			type     => 'HASH',
+			required => [qw//],
+			allowed  => [qw/wallet/],
+		       },
+  getDeveloperAppKeys => {
+			type     => 'HASH',
+			required => [qw//],
+			allowed  => [qw//],
+		       },
+  getAccountStatement => {
+			type     => 'HASH',
+			required => [qw//],
+			allowed  => [qw/locale fromRecord recordCount itemDateRange
+				        includeItem wallet/],
+		       },
+  listCurrencyRates => {
+			type     => 'HASH',
+			required => [qw//],
+			allowed  => [qw/fromCurrency/],
+		       },
+  transferFunds     => {
+			type     => 'HASH',
+			required => [qw/from to amount/],
+			allowed  => [qw//],
+		       },
+# arrays
+  betIds            => {
+			type     => 'ARRAY',
+                        array_of => 'betId',
+		       },
+  marketIds         => {
+			type     => 'ARRAY',
+                        array_of => 'marketId',
+		       },
+  eventTypeIds      => {
+			type     => 'ARRAY',
+                        array_of => 'eventTypeId',
+		       },
+  eventIds          => {
+			type     => 'ARRAY',
+                        array_of => 'eventId',
+		       },
+  runnerIds         => {
+			type     => 'ARRAY',
+                        array_of => 'runnerId',
+		       },
+  marketProjection  => {
+			type     => 'ARRAY',
+                        array_of => 'MarketProjection',
+		       },
+  placeInstructions => {
+			type     => 'ARRAY',
+                        array_of => 'PlaceInstruction',
+		       },
+  cancelInstructions => {
+			type     => 'ARRAY',
+                        array_of => 'CancelInstruction',
+		       },
+  replaceInstructions => {
+			type     => 'ARRAY',
+                        array_of => 'ReplaceInstruction',
+		       },
+  updateInstructions => {
+			type     => 'ARRAY',
+                        array_of => 'UpdateInstruction',
+		       },
+  exchangeIds       => {
+			type     => 'ARRAY',
+                        array_of => 'exchangeId',
+		       },
+  competitionIds    => {
+			type     => 'ARRAY',
+                        array_of => 'competitionId',
+		       },
+  venues            => {
+			type     => 'ARRAY',
+                        array_of => 'venue',
+		       },
+  marketBettingTypes => {
+			type     => 'ARRAY',
+                        array_of => 'MarketBettingType',
+		       },
+  marketCountries   => {
+			type     => 'ARRAY',
+                        array_of => 'country',
+		       },
+  marketTypeCodes   => {
+			type     => 'ARRAY',
+                        array_of => 'marketTypeCode',
+		       },
+  withOrders        => {
+			type     => 'ARRAY',
+                        array_of => 'OrderStatus',
+		       },
   };
 
+# Common scalars
+  $type_defs->{locale}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^[A-Z]{2}$/,
+	       example  => 'GB'
+			  };
+  $type_defs->{country} = $type_defs->{locale};
+  $type_defs->{betId}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\d{10,15}$/,
+	       example  => '42676999999'
+			  };
+  $type_defs->{marketId}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/[12]\.\d+$/,
+	       example  => '1.116099999'
+			  };
+  $type_defs->{eventTypeId}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\d{1,20}$/,
+	       example  => '7'
+			  };
+  $type_defs->{eventId}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\d{8,10}$/,
+	       example  => '27292599'
+			  };
+  $type_defs->{runnerId}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\d{6,10}$/,
+	       example  => '6750999'
+			  };
+  $type_defs->{currencyCode}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^[A-Z]{3}$/,
+	       example  => 'GBP'
+			  };
+  $type_defs->{fromCurrency} = $type_defs->{currencyCode};
+  $type_defs->{competitionId}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\d{1,10}$/,
+	       example  => '409999'
+			  };
 
-
+# betfair data types (all the following pod is still inside the _load_data_types sub)
+# each type and any sub-types are loaded into the hash following their pod entry.
 
 
 =head1 BETFAIR DATA TYPES
@@ -1594,7 +1855,7 @@ Enumeration
 			      type     => 'ENUM',
 			      allowed  => [qw/SETTLED VOIDED LAPSED CANCELLED/],
 			     };
-
+  $type_defs->{betStatus} = $type_defs->{BetStatus};
 
 =head3 CancelInstruction
 
@@ -1608,6 +1869,7 @@ Enumeration
                required => [qw/betId/],
 	       allowed  => [qw/sizeReduction/],
 			  };
+  $type_defs->{sizeReduction} = $double;
 
 =head3 CancelInstructionReport
 
@@ -1741,6 +2003,11 @@ Enumeration
 	       allowed  => [qw/bestPricesDepth rollupModel rollupLimit
 			       rollupLiabilityThreshold rollupLiabilityFactor/],
 					 };
+  $type_defs->{bestPricesDepth}           = $integer;
+  $type_defs->{rollupLimit}               = $integer;
+  $type_defs->{rollupLiabilityThreshold}  = $double;
+  $type_defs->{rollupLiabilityFactor}     = $integer;
+  $type_defs->{exBestOffersOverrides}     = $type_defs->{ExBestOffersOverrides};
 
 =head3 ExchangePrices
 
@@ -1795,6 +2062,7 @@ Enumeration
 			    type     => 'ENUM',
 			    allowed  => [qw/EVENT_TYPE EVENT MARKET SIDE BET/],
 			   };
+  $type_defs->{groupBy}  = $type_defs->{GroupBy};
 
 =head3 IncludeItem
 
@@ -1811,6 +2079,7 @@ Enumeration
 		    type     => 'ENUM',
 		    allowed  => [qw/ALL DEPOSITS_WITHDRAWALS EXCHANGE POKER_ROOM/],
 			       };
+  $type_defs->{includeItem}  = $type_defs->{IncludeItem};
 
 =head3 InstructionReportErrorCode
 
@@ -1863,6 +2132,9 @@ Enumeration
                required => [qw/liability price/],
 	       allowed  => [qw//],
 				     };
+  $type_defs->{liability}  = $double;
+  $type_defs->{price}      = $double;
+  $type_defs->{limitOnCloseOrder}  = $type_defs->{LimitOnCloseOrder};
 
 =head3 LimitOrder
 
@@ -1877,6 +2149,8 @@ Enumeration
                required => [qw/size price persistenceType/],
 	       allowed  => [qw//],
 			      };
+  $type_defs->{size}    = $double;
+  $type_defs->{limitOrder}  = $type_defs->{LimitOrder};
 
 =head3 MarketBettingType
 
@@ -1989,6 +2263,7 @@ Enumeration
                required => [qw/liability/],
 	       allowed  => [qw//],
 				      };
+  $type_defs->{marketOnCloseOrder}  = $type_defs->{MarketOnCloseOrder};
 
 =head3 MarketProfitAndLoss
 
@@ -2034,6 +2309,7 @@ Enumeration
 	       allowed  => [qw/MINIMUM_TRADED MAXIMUM_TRADED MINIMUM_AVAILABLE
 			       MAXIMUM_AVAILABLE FIRST_TO_START LAST_TO_START/],
 			      };
+  $type_defs->{sort}  = $type_defs->{MarketSort};
 
 =head3 MarketStatus
 
@@ -2079,6 +2355,7 @@ Enumeration
      	       type     => 'ENUM',
 	       allowed  => [qw/NO_ROLLUP ROLLED_UP_BY_PRICE ROLLED_UP_BY_AVG_PRICE/],
 				   };
+  $type_defs->{matchProjection}  = $type_defs->{MatchProjection};
 
 =head3 Order
 
@@ -2116,6 +2393,7 @@ Enumeration
 	       allowed  => [qw/BY_BET BY_MARKET BY_MATCH_TIME BY_PLACE_TIME
 			       BY_SETTLED_TIME BY_VOID_TIME/],
 			   };
+  $type_defs->{orderBy} = $type_defs->{OrderBy};
 
 =head3 OrderProjection
 
@@ -2131,6 +2409,7 @@ Enumeration
      	       type     => 'ENUM',
 	       allowed  => [qw/ALL EXECUTABLE EXECUTION_COMPLETE/],
 				   };
+  $type_defs->{orderProjection} = $type_defs->{OrderProjection};
 
 =head3 OrderStatus
 
@@ -2160,6 +2439,7 @@ Enumeration
      	       type     => 'ENUM',
 	       allowed  => [qw/LIMIT LIMIT_ON_CLOSE MARKET_ON_CLOSE/],
 			     };
+  $type_defs->{orderType}  = $type_defs->{OrderType};
 
 =head3 PersistenceType
 
@@ -2175,6 +2455,8 @@ Enumeration
      	       type     => 'ENUM',
 	       allowed  => [qw/LAPSE PERSIST MARKET_ON_CLOSE/],
 				   };
+  $type_defs->{persistenceType}     = $type_defs->{PersistenceType};
+  $type_defs->{newPersistenceType}  = $type_defs->{PersistenceType};
 
 =head3 PlaceInstruction
 
@@ -2190,9 +2472,11 @@ Enumeration
 
   $type_defs->{PlaceInstruction}  = {
      	       type     => 'HASH',
-               required => [qw/ordertype selectionId side/],
+               required => [qw/orderType selectionId side/],
 	       allowed  => [qw/handicap limitOrder limitOnCloseOrder marketOnCloseOrder/],
 				    };
+  $type_defs->{selectionId}  = $type_defs->{runnerId};
+  $type_defs->{handicap}     = $double;
 
 =head3 PlaceInstructionReport
 
@@ -2236,6 +2520,13 @@ Enumeration
                required => [qw//],
 	       allowed  => [qw/priceData exBestOffersOverrides virtualise rolloverStakes/],
 				   };
+  $type_defs->{priceData}        = {
+				    type     => 'ARRAY',
+				    array_of => 'PriceData',
+				   };
+  $type_defs->{virtualise}       = $boolean;
+  $type_defs->{rolloverStakes}   = $boolean;
+  $type_defs->{priceProjection}  = $type_defs->{PriceProjection};
 
 =head3 PriceSize
 
@@ -2254,6 +2545,7 @@ Enumeration
                required => [qw/betId newPrice/],
 	       allowed  => [qw//],
 			  };
+  $type_defs->{newPrice} = $double;
 
 =head3 ReplaceInstructionReport
 
@@ -2277,6 +2569,7 @@ Enumeration
      	       type     => 'ENUM',
 	       allowed  => [qw/STAKE PAYOUT MANAGED_LIABILITY NONE/],
 			       };
+  $type_defs->{rollupModel}  = $type_defs->{RollupModel};
 
 =head3 Runner
 
@@ -2338,6 +2631,7 @@ Enumeration
      	       type     => 'ENUM',
 	       allowed  => [qw/BACK LAY/],
 			};
+  $type_defs->{side}  = $type_defs->{Side};
 
 =head3 SortDir
 
@@ -2352,6 +2646,7 @@ Enumeration
      	       type     => 'ENUM',
 	       allowed  => [qw/EARLIEST_TO_LATEST LATEST_TO_EARLIEST/],
 			   };
+  $type_defs->{sortDir} = $type_defs->{SortDir};
 
 =head3 StartingPrices
 
@@ -2406,11 +2701,12 @@ Enumeration
      	       type     => 'ENUM',
 	       allowed  => [qw/DAYS HOURS MINUTES/],
 				   };
+  $type_defs->{granularity}  = $type_defs->{TimeGranularity};
 
 =head3 TimeRange
 
-  from              Date
-  to                Date
+  from              Date      OPT
+  to                Date      OPT
 
 =cut
 
@@ -2419,6 +2715,10 @@ Enumeration
                required => [qw//],
 	       allowed  => [qw/from to/],
 			     };
+  $type_defs->{dateRange}        = $type_defs->{TimeRange};
+  $type_defs->{settledDateRange} = $type_defs->{TimeRange};
+  $type_defs->{itemDateRange}    = $type_defs->{TimeRange};
+  $type_defs->{marketStartTime}  = $type_defs->{TimeRange};
 
 =head3 TimeRangeResult
 
@@ -2457,6 +2757,21 @@ Enumeration
 			   type     => 'ENUM',
 			   allowed  => [qw/UK AUSTRALIAN/],
 			  };
+  $type_defs->{wallet}      = $type_defs->{Wallet};
+  $type_defs->{fromWallet}  = $type_defs->{Wallet};
+  $type_defs->{toWallet}    = $type_defs->{Wallet};
+
+# A Dirty Hack datatype, because 'instructions' is ambiguous, and could refer
+# to place-, cancel-, replace- or updateOrders methods. God I hate Betfair.
+  $type_defs->{Instruction}  = {
+     	       type     => 'HASH',
+	       required => [qw//],
+	       allowed  => [qw/orderType selectionId side handicap limitOrder
+                               limitOnCloseOrder marketOnCloseOrder betId sizeReduction
+                               newPrice newPersistenceType/],
+			       };
+
+
 
   return $type_defs;
 }

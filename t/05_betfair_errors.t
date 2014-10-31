@@ -2,12 +2,10 @@
 use strict;
 use warnings;
 use Net::Ping;
+use WWW::BetfairNG;
 use Test::More;
 
-# Load Module
-BEGIN { use_ok('WWW::BetfairNG') };
 
-# Check if we can use the internet
 my $continue = 1;
 my $p = Net::Ping->new();
 $continue = 0 unless $p->ping('www.bbc.co.uk');

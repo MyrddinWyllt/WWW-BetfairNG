@@ -371,7 +371,7 @@ sub login {
   }
   $self->{response} = decode_json($response->{content});
   unless ($self->{response}->{loginStatus} eq 'SUCCESS') {
-    $self->{error}  = $self->{response}->{error};
+    $self->{error}  = $self->{response}->{loginStatus};
     return 0;
   }
   $self->session($self->{response}->{sessionToken});
@@ -423,7 +423,7 @@ sub interactiveLogin {
   }
   $self->{response} = decode_json($response->{content});
   unless ($self->{response}->{status} eq 'SUCCESS') {
-    $self->{error}  = $self->{response}->{error};
+    $self->{error}  = $self->{response}->{status};
     return 0;
   }
   $self->session($self->{response}->{token});
@@ -462,7 +462,7 @@ sub logout {
   return 0 unless ($content);
   $self->{response} = decode_json($content);
   unless ($self->{response}->{status} eq 'SUCCESS') {
-    $self->{error}  = $self->{response}->{error};
+    $self->{error}  = $self->{response}->{status};
     return 0;
   }
   $self->session('');
@@ -503,7 +503,7 @@ sub keepAlive {
   return 0 unless ($content);
   $self->{response} = decode_json($content);
   unless ($self->{response}->{status} eq 'SUCCESS') {
-    $self->{error}  = $self->{response}->{error};
+    $self->{error}  = $self->{response}->{status};
     return 0;
   }
   $self->session($self->{response}->{token});
@@ -1411,13 +1411,13 @@ sub _gunzip {
   my $self  = shift;
   my $input = shift;
   unless ($input) {
-    $self->error("gunzip failed : empty input string");
+    $self->{error} = "gunzip failed : empty input string";
     return 0;
   }
   my $output;
   my $status = gunzip(\$input => \$output);
   unless ($status) {
-    $self->error("gunzip failed : $GunzipError");
+    $self->{error} = "gunzip failed : $GunzipError";
     return 0;
   }
   return $output;

@@ -48,7 +48,7 @@ foreach my $method (keys %methods) {
   my $params = {};
   foreach my $required_param (@{$methods{$method}}) {
       ok(!$bf->$method($params), "Call $method");
-      is($bf->error, $param_data{$required_param}{errstr} , "$method error msg");
+      is($bf->error, 'Not logged in' , "$method error msg");
       my $pkey = $param_data{$required_param}{name};
       my $pval = $param_data{$required_param}{value};
       $params->{$pkey} = $pval;

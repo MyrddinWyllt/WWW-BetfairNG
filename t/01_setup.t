@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 52;
+use Test::More tests => 57;
 
 # Tests the setup and accessor methods
 #=====================================
@@ -22,26 +22,31 @@ ok($bf->ssl_cert('certfile'),        'SET ssl_cert');
 ok($bf->ssl_key( 'keyfile'),         'SET ssl_key');
 ok($bf->app_key( 'appkey'),          'SET app_key');
 ok($bf->session( 'session_token'),   'SET session');
+ok($bf->check_parameters(1),         'SET check_parameters');
 # GET attributes
 is($bf->ssl_cert(), 'certfile',      'GET ssl_cert');
 is($bf->ssl_key(),  'keyfile',       'GET ssl_key');
 is($bf->app_key(),  'appkey',        'GET app_key');
 is($bf->session(),  'session_token', 'GET session');
+is($bf->check_parameters(),  '1',    'GET check_parameters');
 # RE-GET attributes
 is($bf->ssl_cert(), 'certfile',      'RE-GET ssl_cert');
 is($bf->ssl_key(),  'keyfile',       'RE-GET ssl_key');
 is($bf->app_key(),  'appkey',        'RE-GET app_key');
 is($bf->session(),  'session_token', 'RE-GET session');
+is($bf->check_parameters(),  '1',    'RE-GET check_parameters');
 #UNSET attributes
 is($bf->ssl_cert(undef),  undef,     'UNSET ssl_cert');
 is($bf->ssl_key( undef),  undef,     'UNSET ssl_key');
 is($bf->app_key( undef),  undef,     'UNSET app_key');
 is($bf->session( undef),  undef,     'UNSET session');
+is($bf->check_parameters(undef), '0','UNSET check_parameters');
 #CHECK UNSET attributes
 is($bf->ssl_cert(),  undef,          'CHECK UNSET ssl_cert');
 is($bf->ssl_key(),   undef,          'CHECK UNSET ssl_key');
 is($bf->app_key(),   undef,          'CHECK UNSET app_key');
 is($bf->session(),   undef,          'CHECK UNSET session');
+is($bf->check_parameters(), '0',     'CHECK UNSET check_parameters');
 #Test Read-only attributes
 is($bf->error(),               'OK', 'CHECK error OK');
 isa_ok($bf->response(),'HASH');

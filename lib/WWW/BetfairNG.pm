@@ -366,7 +366,7 @@ sub login {
   my $response = $login_client->post_form($url, $formdata);
   $self->app_key(undef) unless $got_app_key;
   unless ($response->{success}) {
-    $self->{error}  = $response->{status}.' '.$response->{reason};
+    $self->{error}  = $response->{status}.' '.$response->{reason}.' '.$response->{content};
     return 0;
   }
   $self->{response} = decode_json($response->{content});
@@ -418,7 +418,7 @@ sub interactiveLogin {
   my $response = $login_client->post_form($url, $formdata);
   $self->app_key(undef) unless $got_app_key;
   unless ($response->{success}) {
-    $self->{error}  = $response->{status}.' '.$response->{reason};
+    $self->{error}  = $response->{status}.' '.$response->{reason}.' '.$response->{content};
     return 0;
   }
   $self->{response} = decode_json($response->{content});
@@ -455,7 +455,7 @@ sub logout {
   my $url = BF_LOGOUT_ENDPOINT;
   my $response = $self->{client}->get($url, $options);
   unless ($response->{success}) {
-    $self->{error}  = $response->{status}.' '.$response->{reason};
+    $self->{error}  = $response->{status}.' '.$response->{reason}.' '.$response->{content};
     return 0;
   }
   my $content = $self->_gunzip($response->{content});
@@ -496,7 +496,7 @@ sub keepAlive {
   my $url = BF_KPALIVE_ENDPOINT;
   my $response = $self->{client}->get($url, $options);
   unless ($response->{success}) {
-    $self->{error}  = $response->{status}.' '.$response->{reason};
+    $self->{error}  = $response->{status}.' '.$response->{reason}.' '.$response->{content};
     return 0;
   }
   my $content = $self->_gunzip($response->{content});
@@ -1343,7 +1343,7 @@ sub navigationMenu {
 		};
   my $response = $self->{client}->get($url, $options);
   unless ($response->{success}) {
-    $self->{error}  = $response->{status}.' '.$response->{reason};;
+    $self->{error}  = $response->{status}.' '.$response->{reason}.' '.$response->{content};
     return 0;
   }
   my $content = $self->_gunzip($response->{content});
@@ -1392,10 +1392,11 @@ sub _callAPI {
       my $content = $self->_gunzip($response->{content});
       $self->{response} = decode_json($content);
       $self->{error}  = $self->{response}->{detail}->{APINGException}->{errorCode} ||
-	$response->{status}.' '.$response->{reason};
+	$response->{status}.' '.$response->{reason}.' '.$response->{content};
     }
     else {
-      $self->{error}  = $response->{status}.' '.$response->{reason};
+      $self->{error}  = $response->{status}.' '.$response->{reason}.' '
+                       .$response->{content};
     }
     return 0;
   }
@@ -2794,7 +2795,9 @@ Myrddin Wyllt, E<lt>myrddinwyllt@tiscali.co.ukE<gt>
 
 =head1 ACKNOWLEDGEMENTS
 
-Main inspiration for this was David Farrell's WWW::betfair module, which was written for the v6 SOAP interface.
+Main inspiration for this was David Farrell's WWW::betfair module,
+which was written for the v6 SOAP interface. Thanks also to Carl
+O'Rourke for suggestions on clarifying error messages.
 
 =head1 COPYRIGHT AND LICENSE
 

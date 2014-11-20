@@ -148,7 +148,7 @@ plan( skip_all => "No internet connection found") unless $continue;
       like($bf->error, qr/^INVALID_/,      "Bad app key or session error message");
     }
     else {
-      is($bf->error, "400 Bad Request", "bad request error message");
+      like($bf->error, qr/^400 Bad Request/, "bad request error message");
     }
   }
 

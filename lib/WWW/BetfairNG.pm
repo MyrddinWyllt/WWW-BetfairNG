@@ -46,9 +46,9 @@ our $VERSION = '0.09';
 Betfair is an online betting exchange which allows registered users to interact with it
 using a JSON-based API. This module provides an interface to that service which handles
 the JSON exchange, taking and returning perl data structures (usually hashrefs). Although
-some checking of the existence of required parameter fields is done, and a listing of the
-BETFAIR DATA TYPES is provided below, it requires a level of understanding of the Betfair
-API which is best gained from their own documentation, available from
+there is an option to thoroughly check parameters before sending a request, and a listing
+of the BETFAIR DATA TYPES is provided below, it requires a level of understanding of the
+Betfair API which is best gained from their own documentation, available from
 L<https://developer.betfair.com/>
 
 To use this library, you will need a funded Betfair account and an application key. To use
@@ -211,21 +211,18 @@ sub session {
   my $check = $bf->check_parameters();
   $bf->check_parameters('<boolean>');
 
-Gets or sets a flag telling the object whether or not it should do a
-detailed check on the validity of parameters passed to the API
-methods. If this is set, the parameter hash will be checked before it
-is sent to the API, and any errors in construction will result in the
-method call immediately returning '0' and C<< $bf->error >> being set
-to a message detailing the precise problem. Only the first error found
-will be returned, so several iterations may be necessary to fix a
-badly broken parameter hash. If the flag is not set, any parameters
-that are a valid hashref or anonymous hash will be passed straight to
-Betfair, and errors in the construction will result in a Betfair
-error, which will usually be more general (i.e. cryptic and
-unhelpful). As some parameter hashes can be quite complicated, there
-is a performance hit incurred by turning parameter checking on. For
-this reason, the default is to NOT check parameters, although you
-should turn it on during development and for debugging.
+Gets or sets a flag telling the object whether or not it should do a detailed check on the
+validity of parameters passed to the API methods. If this is set, the parameter hash will
+be checked before it is sent to the API, and any errors in construction will result in the
+method call immediately returning '0' and C<< $bf->error >> being set to a message
+detailing the precise problem. Only the first error found will be returned, so several
+iterations may be necessary to fix a badly broken parameter hash. If the flag is not set,
+any parameters that are a valid hashref or anonymous hash will be passed straight to
+Betfair, and errors in the construction will result in a Betfair error, which will usually
+be more general (i.e. cryptic and unhelpful). As some parameter hashes can be quite
+complicated, there is a performance hit incurred by turning parameter checking on. For
+this reason, the default is to NOT check parameters, although you should turn it on during
+development and for debugging.
 
 =cut
 

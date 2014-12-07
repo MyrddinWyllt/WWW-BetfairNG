@@ -1,12 +1,12 @@
-WWW-BetfairNG version 0.08
+WWW-BetfairNG version 0.09
 ==========================
 
 Betfair is an online betting exchange which allows registered users to
 interact with it using a JSON-based API. This module provides an
 interface to that service which handles the JSON exchange, taking and
-returning perl data structures (usually hashrefs). Although some
-checking of the existence of required parameter fields is done, and a
-listing of the BETFAIR DATA TYPES is provided in the perldoc , it
+returning perl data structures (usually hashrefs). Although there is
+an option to thoroughly check parameters before sending a request, and
+a listing of the BETFAIR DATA TYPES is provided in the perldoc , it
 requires a level of understanding of the Betfair API which is best
 gained from their own documentation, available from
 https://developer.betfair.com/

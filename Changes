@@ -1,5 +1,8 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.10  Sat Jan 31 15:12:00 2015
+        - Bug fixes to parameter checking code for Enumerations
+
 0.09  Sun Dec 07 14:38:00 2014
         - Added a parameter-checking method which does a full recursive
           check of parameter names, existence and data types. (off by default)

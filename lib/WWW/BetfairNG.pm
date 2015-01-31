@@ -24,7 +24,7 @@ Version 0.09
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 
@@ -1499,13 +1499,14 @@ sub _check_parameter {
     if (my $type = ref($parameter)) {
       $type = lc($type);
       $self->{error}  = "Parameter '$name' should be a scalar, not a reference to a";
-      $self->{error} .= ($type = 'array' ? 'n ' : ' ').$type;
+      $self->{error} .= ($type eq 'array' ? 'n ' : ' ').$type;
       return 0;
     }
     unless (grep {$_ eq $parameter} @{$def->{allowed}}) {
       $self->{error}  = "'$parameter' is not a valid value for '$name', ";
       $self->{error} .= "valid values are - ";
       $self->{error} .= join(", ", @{$def->{allowed}});
+      return 0;
     }
   }
   elsif ($def->{type} eq 'SCALAR') {

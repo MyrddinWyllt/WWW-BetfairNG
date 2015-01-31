@@ -25,4 +25,4 @@ requires:
   IO::Uncompress::Gunzip: '2.06'
   JSON::MaybeXS: '1.002002'
   Net::SSLeay: '1.49'
-version: '0.09'
+version: '0.10'

@@ -2,12 +2,10 @@
 use strict;
 use warnings;
 use Net::Ping;
-use Test::More tests => 52;
+use WWW::BetfairNG;
+use Test::More;
 
-# Load Module
-BEGIN { use_ok('WWW::BetfairNG') };
 
-# Check if we can use the internet
 my $continue = 1;
 my $p = Net::Ping->new();
 $continue = 0 unless $p->ping('www.bbc.co.uk');
@@ -150,6 +148,8 @@ plan( skip_all => "No internet connection found") unless $continue;
       like($bf->error, qr/^INVALID_/,      "Bad app key or session error message");
     }
     else {
-      is($bf->error, "400 Bad Request", "bad request error message");
+      like($bf->error, qr/^400 Bad Request/, "bad request error message");
     }
   }
+
+done_testing();

@@ -20,11 +20,11 @@ WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
 
 =head1 VERSION
 
-Version 0.09
+Version 0.11
 
 =cut
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 =head1 SYNOPSIS
 
@@ -1098,6 +1098,7 @@ Return Value
   timezone          String
   discountRate      Double
   pointsBalance     Integer
+  countryCode       String
 
 =cut
 
@@ -2799,7 +2800,7 @@ O'Rourke for suggestions on clarifying error messages.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2014 by Myrddin Wyllt
+Copyright (C) 2015 by Myrddin Wyllt
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

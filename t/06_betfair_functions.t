@@ -300,7 +300,11 @@ SKIP: {
     }
     # Won't test transferFunds - on very dodgy ground moving other people's money
     # Won't do the whole navigation menu, just Horse Racing RACES and child markets
-    ok($bf->navigationMenu(),                                   "navigation Menu");
+    # Changed timeout on navigationMenu because it was failing at 5 seconds, so call
+    # the method a few times to make sure it's fixed.
+    for (1..7) {
+      ok($bf->navigationMenu(),                                 "navigation Menu");
+    }
     is($bf->response->{id},       '0',                          "id = '0'");
     is($bf->response->{name},     'ROOT',                       "name = 'ROOT'");
     is($bf->response->{type},     'GROUP',                      "type = GROUP");

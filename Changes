@@ -1,5 +1,9 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.11  Sat Feb 28 23:50:00 2015
+        - Extended timeout of navigationMenu method to 30 seconds, as busy days
+          were causing this to fail. All other methods remain at 5 sec timeout.
+
 0.10  Sat Jan 31 15:12:00 2015
         - Bug fixes to parameter checking code for Enumerations
 

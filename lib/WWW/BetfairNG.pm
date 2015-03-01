@@ -1332,6 +1332,16 @@ sub navigationMenu {
     $self->{error} = 'No application key set';
     return 0;
   }
+  # Can't use default client because we need a longer timeout
+  my $client = HTTP::Tiny->new(
+                     timeout         => 30,
+                     agent           => "WWW::BetfairNG/$VERSION",
+		     verify_SSL      => 1,
+                     default_headers => {'Content-Type'    => 'application/json',
+			                 'Accept'          => 'application/json',
+			                 'Accept-Encoding' => 'gzip'
+			                }
+  );
   my $url = BF_BETTING_ENDPOINT.'en/navigation/menu.json';
   my $options = {
 		 headers => {
@@ -1339,7 +1349,7 @@ sub navigationMenu {
 			     'X-Application'    => $self->app_key
 			    }
 		};
-  my $response = $self->{client}->get($url, $options);
+  my $response = $client->get($url, $options);
   unless ($response->{success}) {
     $self->{error}  = $response->{status}.' '.$response->{reason}.' '.$response->{content};
     return 0;
@@ -2796,7 +2806,9 @@ Myrddin Wyllt, E<lt>myrddinwyllt@tiscali.co.ukE<gt>
 
 Main inspiration for this was David Farrell's WWW::betfair module,
 which was written for the v6 SOAP interface. Thanks also to Carl
-O'Rourke for suggestions on clarifying error messages.
+O'Rourke for suggestions on clarifying error messages and Colin
+Magee for the suggestion to extend the timeout period for the
+navigationMenu call.
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -1821,7 +1821,7 @@ sub _load_data_types {
 			  };
   $type_defs->{runnerId}  = {
 	       type     => 'SCALAR',
-	       allowed  => qr/^\d{6,10}$/,
+	       allowed  => qr/^\d{3,10}$/,
 	       example  => '6750999'
 			  };
   $type_defs->{currencyCode}  = {

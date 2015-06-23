@@ -2229,6 +2229,7 @@ Enumeration
   wallet             String
   rules              String
   rulesHasDate       Boolean
+  eachWayDivisor     Double
   clarifications     String
 
 =head3 MarketFilter

@@ -294,17 +294,19 @@ sub response {
 =head1 API CALLS
 
 These are generally of the form '$return_value = $bf->someCall($parameters)', where
-'$parameters' is a hash reference (or anonymous hash) containing one or more BETFAIR DATA
-TYPES (described below), and $return_value is a hash or array reference, again containing
-one or more BETFAIR DATA TYPES. Many of these data types are straightforward lists or
-hashes of scalars, but some are quite complex structures. Depending on the call, some
-parameters may be required (RQD) and others may be optional (OPT). A check for the
-existence of required parameters is made before a call is despatched, but no detailed
-checking is made of the data structures to make sure they conform to what Betfair expects
-- the call is just sent 'as is' to the API, and any errors in the construction of the hash
-will result in an error being returned by Betfair. Any error in a call, for whatever
-reason, will result in a $return_value of '0'. In this case, $bf->error() will contain a
-string describing the error and further details of the error may be found by examining
+'$parameters' is a hash reference (or anonymous hash) containing one or more BETFAIR
+DATA TYPES (described below), and $return_value is a hash or array reference, again
+containing one or more BETFAIR DATA TYPES. Many of these data types are straightforward
+lists or hashes of scalars, but some are quite complex structures. Depending on the
+call, some parameters may be required (RQD) and others may be optional (OPT). If
+$bf->check_parameters() is set to 'true', the parameter hash will be checked before it
+is sent to the API, and any errors in construction will result in the method call
+immediately returning '0' and C<< $bf->error >> being set to a message detailing the
+precise problem. If $bf->check_parameters() is set to 'false' (the default), the
+parameter hash is sent 'as is' to Betfair, and any problems with it's construction will
+result in a Betfair error message.  Any error in a call, for whatever reason, will
+result in a $return_value of '0'. In this case, $bf->error() will contain a string
+describing the error and further details of the error may be found by examining
 $bf->response().
 
 

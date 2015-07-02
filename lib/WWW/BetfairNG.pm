@@ -20,11 +20,11 @@ WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
 
 =head1 VERSION
 
-Version 0.11
+Version 0.12
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 =head1 SYNOPSIS
 
@@ -473,7 +473,7 @@ sub logout {
   my $return_value = $bf->keepAlive();
 
 Sends a 'Keep Alive' message to the host. Without this, the session will time out after
-about twelve hours. Unlike the SOAP interface, other API calls do NOT reset the timeout;
+about four hours. Unlike the SOAP interface, other API calls do NOT reset the timeout;
 it has to be done explicitly with a 'keepAlive'. Returns '1' if the keepAlive succeeded,
 '0' if any errors were encountered.
 
@@ -1913,6 +1913,8 @@ Enumeration
   sizeSettled       Double
   profit            Double
   sizeCancelled     Double
+  lastMatchedDate   Date
+  betOutcome        String
 
 =head3 Competition
 
@@ -2131,6 +2133,17 @@ Enumeration
 Enumeration
 
   UNKNOWN     Statement item not mapped to a specific class.
+
+=head3 ItemDescription
+
+  eventTypeDesc     String
+  eventDesc         String
+  marketDesc        String
+  marketStartTime   Date
+  runnerDesc        String
+  numberOfWinners   Integer
+  marketType        String
+  eachWayDivisor    Double
 
 =head3 LimitOnCloseOrder
 

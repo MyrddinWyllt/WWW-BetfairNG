@@ -1674,8 +1674,8 @@ sub _load_data_types {
 		       },
   cancelOrders      => {
 			type     => 'HASH',
-			required => [qw/marketId instructions/],
-			allowed  => [qw/customerRef/],
+			required => [qw//],
+			allowed  => [qw/marketId instructions customerRef/],
 		       },
   replaceOrders     => {
 			type     => 'HASH',

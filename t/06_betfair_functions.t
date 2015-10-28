@@ -95,214 +95,221 @@ SKIP: {
     is($bf->app_key($app_key),      $app_key,                 "Set app key");
     ok($bf->keepAlive(),                                      "keepAlive");
     is($bf->response->{token},      $bf->session,             "Check session token");
-    $params->{filter} = {};
-    ok($bf->listCompetitions($params),                        "listCompetitions");
-    for my $comp (0..@{$bf->response} - 1) {
-      ok(exists $bf->response->[$comp]->{marketCount},        "marketCount");
-      ok(exists $bf->response->[$comp]->{competitionRegion},  "competitionRegion");
-      ok(exists $bf->response->[$comp]->{competition},        "competition");
-      ok(exists $bf->response->[$comp]->{competition}->{id},  "competition{id}");
-      ok(exists $bf->response->[$comp]->{competition}->{name},"competition{name}");
-    }
-    ok($bf->listCountries($params),                           "listCountries");
-    for my $ctry (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$ctry]->{marketCount},        "marketCount");
-      ok(exists $bf->response->[$ctry]->{countryCode},        "countryCode");
-    }
-    $params = {};
-    ok($bf->listCurrentOrders($params),                       "listCurrentOrders");
-    ok(exists $bf->response->{currentOrders},                 "currentOrders");
-    ok(exists $bf->response->{moreAvailable},                 "moreAvailable");
-    for my $order (0..@{$bf->response->{currentOrders}}-1){
-      my $record = $bf->response->{currentOrders}->[$order];
-      ok(exists $record->{betId},          	              "betId");
-      ok(exists $record->{marketId},       	              "marketId");
-      ok(exists $record->{selectionId},    	              "selectionId");
-      ok(exists $record->{handicap},       	              "handicap");
-      ok(exists $record->{priceSize},      	              "priceSize");
-      ok(exists $record->{bspLiability},   	              "bspLiability");
-      ok(exists $record->{side},           	              "side");
-      ok(exists $record->{status},         	              "status");
-      ok(exists $record->{persistenceType},	              "persistenceType");
-      ok(exists $record->{orderType},      	              "orderType");
-      ok(exists $record->{placedDate},     	              "placedDate");
-      ok(exists $record->{matchedDate},    	              "matchedDate");
-    }
-    $params->{betStatus} = 'SETTLED';
-    ok($bf->listClearedOrders($params),                       "listClearedOrders");
-    # No 'required' fields in ClearedOrdersSummary
-    ok(exists $bf->response->{clearedOrders},                 "clearedOrders");
-    ok(exists $bf->response->{moreAvailable},                 "moreAvailable");
-    $params = {filter => {}};
-    ok($bf->listEvents($params),                              "listEvents");
-    for my $event (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$event]->{marketCount},       "marketCount");
-      ok(exists $bf->response->[$event]->{event},             "event");
-      ok(exists $bf->response->[$event]->{event}->{name},     "event{name}");
-      ok(exists $bf->response->[$event]->{event}->{id},       "event{id}");
-      ok(exists $bf->response->[$event]->{event}->{timezone}, "event{timezone}");
-      ok(exists $bf->response->[$event]->{event}->{openDate}, "event{openDate}");
-    }
-    $params = {filter => {}};
-    ok($bf->listEventTypes($params),                           "listEventTypes");
-    for my $type (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$type]->{marketCount},         "marketCount");
-      ok(exists $bf->response->[$type]->{eventType},           "event");
-      ok(exists $bf->response->[$type]->{eventType}->{name},   "event{name}");
-      ok(exists $bf->response->[$type]->{eventType}->{id},     "event{id}");
-    }
-    my $start_time = time() + 86400; # one day from now in seconds
-    my ($sec,$min,$hour,$mday,$month,$year) = gmtime($start_time);
-    $year  += 1900;
-    $month += 1;
-    my $start_time_ISO = sprintf("%04s", $year )."-";
-    $start_time_ISO   .= sprintf("%02s", $month)."-";
-    $start_time_ISO   .= sprintf("%02s", $mday )."T";
-    $start_time_ISO   .= sprintf("%02s", $hour ).":";
-    $start_time_ISO   .= sprintf("%02s", $min  )."Z";
-    $params = {filter => {}};
-    $params->{maxResults}       = '1';
-    $params->{marketProjection} = ['RUNNER_DESCRIPTION'];
-    $params->{marketStartTime}  = {from => $start_time_ISO};
-    ok($bf->listMarketCatalogue($params),                      "listMarketCatalogue");
-    for my $market (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$market]->{marketName},        "marketName");
-      ok(exists $bf->response->[$market]->{marketId},          "marketId");
-      ok(exists $bf->response->[$market]->{totalMatched},      "totalMatched");
-      ok(exists $bf->response->[$market]->{runners},           "runners");
-      foreach my $runner (@{$bf->response->[$market]->{runners}}) {
-	ok(exists $runner->{selectionId},                      "selectionId");
-	ok(exists $runner->{runnerName},                       "runnerName");
-	ok(exists $runner->{handicap},                         "handicap");
-	ok(exists $runner->{sortPriority},                     "sortPriority");
+
+
+    for my $aus (1, 0) { # Run all Betting and Accounts tests for AUS and UK endpoints
+      is($bf->australian($aus),       $aus,                     "Set australian");
+      $params->{filter} = {};
+      ok($bf->listCompetitions($params),                        "listCompetitions");
+      for my $comp (0..@{$bf->response} - 1) {
+	ok(exists $bf->response->[$comp]->{marketCount},        "marketCount");
+	ok(exists $bf->response->[$comp]->{competitionRegion},  "competitionRegion");
+	ok(exists $bf->response->[$comp]->{competition},        "competition");
+	ok(exists $bf->response->[$comp]->{competition}->{id},  "competition{id}");
+	ok(exists $bf->response->[$comp]->{competition}->{name},"competition{name}");
       }
-    }
-    # Concentrate on the first and last runners in the first market
-    my $market_id     = $bf->response->[0]->{marketId};
-    my $runners       = $bf->response->[0]->{runners};
-    $params = {marketIds => [$market_id]};
-    $params->{priceProjection} = {priceData => ['EX_BEST_OFFERS']};
-    ok($bf->listMarketBook($params),                            "listMarketBook");
-    for my $market (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$market]->{marketId},             "marketId");
-      ok(exists $bf->response->[$market]->{isMarketDataDelayed},  "isMarketDataDelayed");
-      ok(exists $bf->response->[$market]->{status},               "status");
-      ok(exists $bf->response->[$market]->{betDelay},             "betDelay");
-      ok(exists $bf->response->[$market]->{bspReconciled},        "bspReconciled");
-      ok(exists $bf->response->[$market]->{complete},             "complete");
-      ok(exists $bf->response->[$market]->{inplay},               "inplay");
-      ok(exists $bf->response->[$market]->{numberOfWinners},      "numberOfWinners");
-      ok(exists $bf->response->[$market]->{numberOfRunners},      "numberOfRunners");
-      ok(exists $bf->response->[$market]->{numberOfActiveRunners},"numberOfActiveRunners");
-#     ok(exists $bf->response->[$market]->{lastMatchTime},        "lastMatchTime");
-      ok(exists $bf->response->[$market]->{totalMatched},         "totalMatched");
-      ok(exists $bf->response->[$market]->{totalAvailable},       "totalAvailable");
-      ok(exists $bf->response->[$market]->{crossMatching},        "crossMatching");
-      ok(exists $bf->response->[$market]->{runnersVoidable},      "runnersVoidable");
-      ok(exists $bf->response->[$market]->{version},              "version");
-      ok(exists $bf->response->[$market]->{runners},              "runners");
-      foreach my $runner (@{$bf->response->[$market]->{runners}}) {
-	ok(exists $runner->{selectionId},                      "selectionId");
-	ok(exists $runner->{handicap},                         "handicap");
-	ok(exists $runner->{status},                           "status");
-#       ok(exists $runner->{adjustmentFactor},                 "adjustmentFactor");
-	ok(exists $runner->{ex},                               "exchange");
-     }
-    }
-    $params = {};
-    $params->{marketId} = $market_id;
-    my $instructions = [];
-    for (0,-1) {
-      my $instruction = {handicap => '0', side => 'BACK', orderType => 'LIMIT'};
-      $instruction->{limitOrder} = {size => '0.01', persistenceType => 'LAPSE'};
-      $instruction->{selectionId} = qq/$runners->[$_]->{selectionId}/;
-      $instruction->{limitOrder}->{price} = "1000";
-      push @$instructions, $instruction;
-    }
-    $params->{instructions} = $instructions;
-    ok(!$bf->placeOrders($params),                              "placeOrders");
-    is($bf->error,         'ACCESS_DENIED',                     "Access Denied");
-    $params = {};
-    $params->{marketId} = $market_id;
-    ok(!$bf->cancelOrders($params),                             "cancelOrders");
-    is($bf->error,         'ACCESS_DENIED',                     "Access Denied");
-    $params->{instructions} = [{betId => '6666666', newPrice => '500'}];
-    ok(!$bf->replaceOrders($params),                            "replaceOrders");
-    is($bf->error,         'ACCESS_DENIED',                     "Access Denied");
-    $params->{instructions} = [{betId => '6666666', newPersistenceType => 'LAPSE'}];
-    ok(!$bf->updateOrders($params),                             "updateOrders");
-    is($bf->error,         'ACCESS_DENIED',                     "Access Denied");
-    $params = {marketIds => [$market_id]};
-    ok($bf->listMarketProfitAndLoss($params),                   "listMarketProfitAndLoss");
-    for my $market (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$market]->{marketId},           "marketId");
-      ok(exists $bf->response->[$market]->{profitAndLosses},    "profitAndLosses");
-      foreach my $runner (@{$bf->response->[$market]->{profitAndLosses}}) {
-	ok(exists $runner->{selectionId},                       "selectionId");
-	ok(exists $runner->{ifWin},                             "ifWin");
+      ok($bf->listCountries($params),                           "listCountries");
+      for my $ctry (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$ctry]->{marketCount},        "marketCount");
+	ok(exists $bf->response->[$ctry]->{countryCode},        "countryCode");
       }
-    }
-    $params = {filter => {}};
-    ok($bf->listMarketTypes($params),                           "listMarketTypes");
-    for my $type (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$type]->{marketType},           "marketType");
-      ok(exists $bf->response->[$type]->{marketCount},          "marketCount");
-    }
-    $params->{granularity} = 'DAYS';
-    ok($bf->listTimeRanges($params),                            "listTimeRanges");
-    for my $range (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$range]->{timeRange},           "timeRange");
-      ok(exists $bf->response->[$range]->{marketCount},         "marketCount");
-      ok(exists $bf->response->[$range]->{timeRange}->{from},   "timeRange{from}");
-      ok(exists $bf->response->[$range]->{timeRange}->{to},     "timeRange{to}");
-    }
-    $params = {filter => {}};
-    ok($bf->listVenues($params),                                "listVenues");
-    for my $venue (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$venue]->{venue},               "venue");
-      ok(exists $bf->response->[$venue]->{marketCount},         "marketCount");
-    }
-    # createDeveloperAppKeys NOT TESTED (getDeveloperAppKeys tested at start of script)
-    ok($bf->getAccountDetails(),                                "getAccountDetails");
-    ok(exists $bf->response->{currencyCode},    		"currencyCode");
-    ok(exists $bf->response->{firstName},     		        "firstName");
-    ok(exists $bf->response->{lastName},      		        "lastName");
-    ok(exists $bf->response->{localeCode},    		        "localeCode");
-    ok(exists $bf->response->{region},        		        "region");
-    ok(exists $bf->response->{timezone},      		        "timezone");
-    ok(exists $bf->response->{discountRate},  		        "discountRate");
-    ok(exists $bf->response->{pointsBalance}, 		        "pointsBalance");
-    ok($bf->getAccountFunds(),                                  "getAccountFunds");
-    ok(exists $bf->response->{availableToBetBalance},  		"availableToBetBalance");
-    ok(exists $bf->response->{exposure},               		"exposure");
-    ok(exists $bf->response->{retainedCommission},     		"retainedCommission");
-    ok(exists $bf->response->{exposureLimit},          		"exposureLimit");
-    ok(exists $bf->response->{discountRate},           		"discountRate");
-    ok(exists $bf->response->{pointsBalance},          		"pointsBalance");
-    $params = {recordCount => 5};
-    ok($bf->getAccountStatement($params),                       "getAccountStatement");
-    ok(exists $bf->response->{moreAvailable},                   "moreAvailable");
-    ok(exists $bf->response->{accountStatement},                "accountStatement");
-    for my $item (@{$bf->response->{accountStatement}}) {
-      ok(exists $item->{refId},                                 "refId");
-      ok(exists $item->{itemDate},       	  	        "itemDate");
-      ok(exists $item->{amount},         	  	        "amount");
-      ok(exists $item->{balance},        	  	        "balance");
-      ok(exists $item->{itemClass},      	  	        "itemClass");
-      ok(exists $item->{itemClassData},  	  	        "itemClassData");
-      ok(exists $item->{legacyData},     	  	        "legacyData");
-    }
-    $params = {fromCurrency => 'GBP'};
-    ok($bf->listCurrencyRates($params),                         "listCurrencyRates");
-    for my $item (0..@{$bf->response}-1) {
-      ok(exists $bf->response->[$item]->{currencyCode},         "currencyCode");
-      ok(exists $bf->response->[$item]->{rate},                 "rate");
-    }
+      $params = {};
+      ok($bf->listCurrentOrders($params),                       "listCurrentOrders");
+      ok(exists $bf->response->{currentOrders},                 "currentOrders");
+      ok(exists $bf->response->{moreAvailable},                 "moreAvailable");
+      for my $order (0..@{$bf->response->{currentOrders}}-1){
+	my $record = $bf->response->{currentOrders}->[$order];
+	ok(exists $record->{betId},          	              "betId");
+	ok(exists $record->{marketId},       	              "marketId");
+	ok(exists $record->{selectionId},    	              "selectionId");
+	ok(exists $record->{handicap},       	              "handicap");
+	ok(exists $record->{priceSize},      	              "priceSize");
+	ok(exists $record->{bspLiability},   	              "bspLiability");
+	ok(exists $record->{side},           	              "side");
+	ok(exists $record->{status},         	              "status");
+	ok(exists $record->{persistenceType},	              "persistenceType");
+	ok(exists $record->{orderType},      	              "orderType");
+	ok(exists $record->{placedDate},     	              "placedDate");
+	# Take out 'matchedDate' test - fails if there are existing unmatched bets
+	#     ok(exists $record->{matchedDate},    	              "matchedDate");
+      }
+      $params->{betStatus} = 'SETTLED';
+      ok($bf->listClearedOrders($params),                       "listClearedOrders");
+      # No 'required' fields in ClearedOrdersSummary
+      ok(exists $bf->response->{clearedOrders},                 "clearedOrders");
+      ok(exists $bf->response->{moreAvailable},                 "moreAvailable");
+      $params = {filter => {}};
+      ok($bf->listEvents($params),                              "listEvents");
+      for my $event (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$event]->{marketCount},       "marketCount");
+	ok(exists $bf->response->[$event]->{event},             "event");
+	ok(exists $bf->response->[$event]->{event}->{name},     "event{name}");
+	ok(exists $bf->response->[$event]->{event}->{id},       "event{id}");
+	ok(exists $bf->response->[$event]->{event}->{timezone}, "event{timezone}");
+	ok(exists $bf->response->[$event]->{event}->{openDate}, "event{openDate}");
+      }
+      $params = {filter => {}};
+      ok($bf->listEventTypes($params),                           "listEventTypes");
+      for my $type (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$type]->{marketCount},         "marketCount");
+	ok(exists $bf->response->[$type]->{eventType},           "event");
+	ok(exists $bf->response->[$type]->{eventType}->{name},   "event{name}");
+	ok(exists $bf->response->[$type]->{eventType}->{id},     "event{id}");
+      }
+      my $start_time = time() + 86400; # one day from now in seconds
+      my ($sec,$min,$hour,$mday,$month,$year) = gmtime($start_time);
+      $year  += 1900;
+      $month += 1;
+      my $start_time_ISO = sprintf("%04s", $year )."-";
+      $start_time_ISO   .= sprintf("%02s", $month)."-";
+      $start_time_ISO   .= sprintf("%02s", $mday )."T";
+      $start_time_ISO   .= sprintf("%02s", $hour ).":";
+      $start_time_ISO   .= sprintf("%02s", $min  )."Z";
+      $params = {filter => {}};
+      $params->{maxResults}       = '1';
+      $params->{marketProjection} = ['RUNNER_DESCRIPTION'];
+      $params->{marketStartTime}  = {from => $start_time_ISO};
+      ok($bf->listMarketCatalogue($params),                      "listMarketCatalogue");
+      for my $market (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$market]->{marketName},        "marketName");
+	ok(exists $bf->response->[$market]->{marketId},          "marketId");
+	ok(exists $bf->response->[$market]->{totalMatched},      "totalMatched");
+	ok(exists $bf->response->[$market]->{runners},           "runners");
+	foreach my $runner (@{$bf->response->[$market]->{runners}}) {
+	  ok(exists $runner->{selectionId},                      "selectionId");
+	  ok(exists $runner->{runnerName},                       "runnerName");
+	  ok(exists $runner->{handicap},                         "handicap");
+	  ok(exists $runner->{sortPriority},                     "sortPriority");
+	}
+      }
+      # Concentrate on the first and last runners in the first market
+      my $market_id     = $bf->response->[0]->{marketId};
+      my $runners       = $bf->response->[0]->{runners};
+      $params = {marketIds => [$market_id]};
+      $params->{priceProjection} = {priceData => ['EX_BEST_OFFERS']};
+      ok($bf->listMarketBook($params),                            "listMarketBook");
+      for my $market (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$market]->{marketId},             "marketId");
+	ok(exists $bf->response->[$market]->{isMarketDataDelayed},  "isMarketDataDelayed");
+	ok(exists $bf->response->[$market]->{status},               "status");
+	ok(exists $bf->response->[$market]->{betDelay},             "betDelay");
+	ok(exists $bf->response->[$market]->{bspReconciled},        "bspReconciled");
+	ok(exists $bf->response->[$market]->{complete},             "complete");
+	ok(exists $bf->response->[$market]->{inplay},               "inplay");
+	ok(exists $bf->response->[$market]->{numberOfWinners},      "numberOfWinners");
+	ok(exists $bf->response->[$market]->{numberOfRunners},      "numberOfRunners");
+	ok(exists $bf->response->[$market]->{numberOfActiveRunners},"numberOfActiveRunners");
+	#     ok(exists $bf->response->[$market]->{lastMatchTime},        "lastMatchTime");
+	ok(exists $bf->response->[$market]->{totalMatched},         "totalMatched");
+	ok(exists $bf->response->[$market]->{totalAvailable},       "totalAvailable");
+	ok(exists $bf->response->[$market]->{crossMatching},        "crossMatching");
+	ok(exists $bf->response->[$market]->{runnersVoidable},      "runnersVoidable");
+	ok(exists $bf->response->[$market]->{version},              "version");
+	ok(exists $bf->response->[$market]->{runners},              "runners");
+	foreach my $runner (@{$bf->response->[$market]->{runners}}) {
+	  ok(exists $runner->{selectionId},                      "selectionId");
+	  ok(exists $runner->{handicap},                         "handicap");
+	  ok(exists $runner->{status},                           "status");
+	  #       ok(exists $runner->{adjustmentFactor},                 "adjustmentFactor");
+	  ok(exists $runner->{ex},                               "exchange");
+	}
+      }
+      $params = {};
+      $params->{marketId} = $market_id;
+      my $instructions = [];
+      for (0,-1) {
+	my $instruction = {handicap => '0', side => 'BACK', orderType => 'LIMIT'};
+	$instruction->{limitOrder} = {size => '0.01', persistenceType => 'LAPSE'};
+	$instruction->{selectionId} = qq/$runners->[$_]->{selectionId}/;
+	$instruction->{limitOrder}->{price} = "1000";
+	push @$instructions, $instruction;
+      }
+      $params->{instructions} = $instructions;
+      ok(!$bf->placeOrders($params),                              "placeOrders");
+      is($bf->error,         'ACCESS_DENIED',                     "Access Denied");
+      $params = {};
+      $params->{marketId} = $market_id;
+      ok(!$bf->cancelOrders($params),                             "cancelOrders");
+      is($bf->error,         'ACCESS_DENIED',                     "Access Denied");
+      $params->{instructions} = [{betId => '6666666', newPrice => '500'}];
+      ok(!$bf->replaceOrders($params),                            "replaceOrders");
+      is($bf->error,         'ACCESS_DENIED',                     "Access Denied");
+      $params->{instructions} = [{betId => '6666666', newPersistenceType => 'LAPSE'}];
+      ok(!$bf->updateOrders($params),                             "updateOrders");
+      is($bf->error,         'ACCESS_DENIED',                     "Access Denied");
+      $params = {marketIds => [$market_id]};
+      ok($bf->listMarketProfitAndLoss($params),                   "listMarketProfitAndLoss");
+      for my $market (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$market]->{marketId},           "marketId");
+	ok(exists $bf->response->[$market]->{profitAndLosses},    "profitAndLosses");
+	foreach my $runner (@{$bf->response->[$market]->{profitAndLosses}}) {
+	  ok(exists $runner->{selectionId},                       "selectionId");
+	  ok(exists $runner->{ifWin},                             "ifWin");
+	}
+      }
+      $params = {filter => {}};
+      ok($bf->listMarketTypes($params),                           "listMarketTypes");
+      for my $type (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$type]->{marketType},           "marketType");
+	ok(exists $bf->response->[$type]->{marketCount},          "marketCount");
+      }
+      $params->{granularity} = 'DAYS';
+      ok($bf->listTimeRanges($params),                            "listTimeRanges");
+      for my $range (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$range]->{timeRange},           "timeRange");
+	ok(exists $bf->response->[$range]->{marketCount},         "marketCount");
+	ok(exists $bf->response->[$range]->{timeRange}->{from},   "timeRange{from}");
+	ok(exists $bf->response->[$range]->{timeRange}->{to},     "timeRange{to}");
+      }
+      $params = {filter => {}};
+      ok($bf->listVenues($params),                                "listVenues");
+      for my $venue (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$venue]->{venue},               "venue");
+	ok(exists $bf->response->[$venue]->{marketCount},         "marketCount");
+      }
+      # createDeveloperAppKeys NOT TESTED (getDeveloperAppKeys tested at start of script)
+      ok($bf->getAccountDetails(),                              "getAccountDetails");
+      ok(exists $bf->response->{currencyCode},    		"currencyCode");
+      ok(exists $bf->response->{firstName},     	        "firstName");
+      ok(exists $bf->response->{lastName},      	        "lastName");
+      ok(exists $bf->response->{localeCode},    	        "localeCode");
+      ok(exists $bf->response->{region},        	        "region");
+      ok(exists $bf->response->{timezone},      	        "timezone");
+      ok(exists $bf->response->{discountRate},  	        "discountRate");
+      ok(exists $bf->response->{pointsBalance}, 	        "pointsBalance");
+      ok($bf->getAccountFunds(),                                "getAccountFunds");
+      ok(exists $bf->response->{availableToBetBalance}, 	"availableToBetBalance");
+      ok(exists $bf->response->{exposure},              	"exposure");
+      ok(exists $bf->response->{retainedCommission},    	"retainedCommission");
+      ok(exists $bf->response->{exposureLimit},         	"exposureLimit");
+      ok(exists $bf->response->{discountRate},          	"discountRate");
+      ok(exists $bf->response->{pointsBalance},         	"pointsBalance");
+      $params = {recordCount => 5};
+      ok($bf->getAccountStatement($params),                     "getAccountStatement");
+      ok(exists $bf->response->{moreAvailable},                 "moreAvailable");
+      ok(exists $bf->response->{accountStatement},              "accountStatement");
+      for my $item (@{$bf->response->{accountStatement}}) {
+	ok(exists $item->{refId},                               "refId");
+	ok(exists $item->{itemDate},       	  	        "itemDate");
+	ok(exists $item->{amount},         	  	        "amount");
+	ok(exists $item->{balance},        	  	        "balance");
+	ok(exists $item->{itemClass},      	  	        "itemClass");
+	ok(exists $item->{itemClassData},  	  	        "itemClassData");
+	ok(exists $item->{legacyData},     	  	        "legacyData");
+      }
+      $params = {fromCurrency => 'GBP'};
+      ok($bf->listCurrencyRates($params),                       "listCurrencyRates");
+      for my $item (0..@{$bf->response}-1) {
+	ok(exists $bf->response->[$item]->{currencyCode},       "currencyCode");
+	ok(exists $bf->response->[$item]->{rate},               "rate");
+      }
+    } # End of Australian loop
+
     # Won't test transferFunds - on very dodgy ground moving other people's money
     # Won't do the whole navigation menu, just Horse Racing RACES and child markets
     # Changed timeout on navigationMenu because it was failing at 5 seconds, so call
     # the method a few times to make sure it's fixed.
-    for (1..7) {
+    for (1..3) {
       ok($bf->navigationMenu(),                                 "navigation Menu");
     }
     is($bf->response->{id},       '0',                          "id = '0'");

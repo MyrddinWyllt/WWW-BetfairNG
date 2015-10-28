@@ -13,6 +13,10 @@ use constant BF_LOGIN_ENDPOINT   => 'https://identitysso.betfair.com/api/login/'
 use constant BF_LOGOUT_ENDPOINT  => 'https://identitysso.betfair.com/api/logout/';
 use constant BF_KPALIVE_ENDPOINT => 'https://identitysso.betfair.com/api/keepAlive/';
 use constant BF_ACCOUNT_ENDPOINT => 'https://api.betfair.com/exchange/account/rest/v1.0/';
+use constant BF_HRTBEAT_ENDPOINT => 'https://api.betfair.com/exchange/heartbeat/json-rpc/v1/';
+use constant BF_RSTATUS_ENDPOINT => 'https://api.betfair.com/exchange/scores/json-rpc/v1/';
+use constant AU_BETTING_ENDPOINT => 'https://api-au.betfair.com/exchange/betting/rest/v1.0/';
+use constant AU_ACCOUNT_ENDPOINT => 'https://api-au.betfair.com/exchange/account/rest/v1.0/';
 
 =head1 NAME
 
@@ -111,7 +115,10 @@ sub new {
     # set non-configurable attributes
     $self->{error}      = 'OK',
     $self->{response}   = {};
-    $self->{p_check}    =  0;
+    $self->{p_check}    = 0;
+    $self->{australian} = 0;
+    $self->{bet_end_pt} = BF_BETTING_ENDPOINT;
+    $self->{acc_end_pt} = BF_ACCOUNT_ENDPOINT;
     $self->{data_types} = {};
     # Create an HTTP::Tiny object to do all the heavy lifting
     my $client = HTTP::Tiny->new(
@@ -237,6 +244,38 @@ sub check_parameters {
     }
   }
   return $self->{p_check};
+}
+
+=head3 australian()
+
+  my $is_aus = $bf->australian();
+  $bf->australian('<boolean>');
+
+Gets or sets a flag telling the object whether or not it should be talking to the Australian
+exchange. If this is set, all calls to Betting and Accounts Operations will be directed to
+the Australian exchange, which is a seperate entity hosted in Australia as required by
+Australian Government legislation. All bets on Australian horseracing markets must be made
+through this exchange, and a seperate 'wallet' is required to hold the stakes and returns.
+The default value is 'false', meaning that calls are directed to the UK exchange. Changing
+the value of 'australian' does NOT require you to log out and log back in, as the current
+session is maintained (in particular, 'keepAlive' still needs to be called with the same
+frequency). Currently, setting up a 'heartbeat' service will not affect bets placed on the
+Australian exchange, as this has not been implemented by Betfair.
+
+=cut
+
+sub australian {
+  my $self = shift;
+  if (@_){
+    my $current_state = $self->{australian};
+    my $flag = shift;
+    $self->{australian} = $flag ? 1 : 0;
+    unless ($self->{australian} == $current_state) {
+      $self->{bet_end_pt} = $self->{australian} ? AU_BETTING_ENDPOINT : BF_BETTING_ENDPOINT;
+      $self->{acc_end_pt} = $self->{australian} ? AU_ACCOUNT_ENDPOINT : BF_ACCOUNT_ENDPOINT;
+    }
+  }
+  return $self->{australian};
 }
 
 =head3 error()
@@ -540,7 +579,7 @@ Return Value
 sub listCompetitions {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listCompetitions/';
+  my $url = $self->{bet_end_pt}.'listCompetitions/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -565,7 +604,7 @@ Return Value
 sub listCountries {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listCountries/';
+  my $url = $self->{bet_end_pt}.'listCountries/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -601,7 +640,7 @@ Return Value
 sub listCurrentOrders {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listCurrentOrders/';
+  my $url = $self->{bet_end_pt}.'listCurrentOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -641,7 +680,7 @@ Return Value
 sub listClearedOrders {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listClearedOrders/';
+  my $url = $self->{bet_end_pt}.'listClearedOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -666,7 +705,7 @@ Return Value
 sub listEvents {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listEvents/';
+  my $url = $self->{bet_end_pt}.'listEvents/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -692,7 +731,7 @@ Return Value
 sub listEventTypes {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listEventTypes/';
+  my $url = $self->{bet_end_pt}.'listEventTypes/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -724,7 +763,7 @@ Return Value
 sub listMarketBook {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listMarketBook/';
+  my $url = $self->{bet_end_pt}.'listMarketBook/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -755,7 +794,7 @@ Return Value
 sub listMarketCatalogue {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listMarketCatalogue/';
+  my $url = $self->{bet_end_pt}.'listMarketCatalogue/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -784,7 +823,7 @@ Return Value
 sub listMarketProfitAndLoss {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listMarketProfitAndLoss/';
+  my $url = $self->{bet_end_pt}.'listMarketProfitAndLoss/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -810,7 +849,7 @@ Return Value
 sub listMarketTypes {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listMarketTypes/';
+  my $url = $self->{bet_end_pt}.'listMarketTypes/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -836,7 +875,7 @@ Return Value
 sub listTimeRanges {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listTimeRanges/';
+  my $url = $self->{bet_end_pt}.'listTimeRanges/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -863,7 +902,7 @@ Return Value
 sub listVenues {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'listVenues/';
+  my $url = $self->{bet_end_pt}.'listVenues/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -907,7 +946,7 @@ Return Value
 sub placeOrders {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'placeOrders/';
+  my $url = $self->{bet_end_pt}.'placeOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
     my $status = $result->{status};
@@ -949,7 +988,7 @@ Return Value
 sub cancelOrders {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'cancelOrders/';
+  my $url = $self->{bet_end_pt}.'cancelOrders/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -989,7 +1028,7 @@ Return Value
 sub replaceOrders {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'replaceOrders/';
+  my $url = $self->{bet_end_pt}.'replaceOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
     my $status = $result->{status};
@@ -1034,7 +1073,7 @@ Return Value
 sub updateOrders {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_BETTING_ENDPOINT.'updateOrders/';
+  my $url = $self->{bet_end_pt}.'updateOrders/';
   my $result = $self->_callAPI($url, $params);
   if ($result) {
     my $status = $result->{status};
@@ -1053,7 +1092,7 @@ sub updateOrders {
 
 As with the Betting Operations, the descriptions of these methods are taken directly from
 the Betfair documentation. Once again, required parameters are denoted by RQD and optional
-ones by OPT. Some parameters are described in terms of BETFAIR FATA TYPES, which are
+ones by OPT. Some parameters are described in terms of BETFAIR DATA TYPES, which are
 described below.
 
 =head3 createDeveloperAppKeys($parameters)
@@ -1078,7 +1117,7 @@ Return Value
 sub createDeveloperAppKeys {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_ACCOUNT_ENDPOINT.'createDeveloperAppKeys/';
+  my $url = $self->{acc_end_pt}.'createDeveloperAppKeys/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1107,7 +1146,7 @@ Return Value
 sub getAccountDetails {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_ACCOUNT_ENDPOINT.'getAccountDetails/';
+  my $url = $self->{acc_end_pt}.'getAccountDetails/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1138,7 +1177,7 @@ Return Value
 sub getAccountFunds {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_ACCOUNT_ENDPOINT.'getAccountFunds/';
+  my $url = $self->{acc_end_pt}.'getAccountFunds/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1158,7 +1197,7 @@ Return Value
 sub getDeveloperAppKeys {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_ACCOUNT_ENDPOINT.'getDeveloperAppKeys/';
+  my $url = $self->{acc_end_pt}.'getDeveloperAppKeys/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1188,7 +1227,7 @@ Return Value
 sub getAccountStatement {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_ACCOUNT_ENDPOINT.'getAccountStatement/';
+  my $url = $self->{acc_end_pt}.'getAccountStatement/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1212,7 +1251,7 @@ Return Value
 sub listCurrencyRates {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_ACCOUNT_ENDPOINT.'listCurrencyRates/';
+  my $url = $self->{acc_end_pt}.'listCurrencyRates/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1242,7 +1281,7 @@ Return Value
 sub transferFunds {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_ACCOUNT_ENDPOINT.'transferFunds/';
+  my $url = $self->{acc_end_pt}.'transferFunds/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1344,7 +1383,7 @@ sub navigationMenu {
 			                 'Accept-Encoding' => 'gzip'
 			                }
   );
-  my $url = BF_BETTING_ENDPOINT.'en/navigation/menu.json';
+  my $url = $self->{bet_end_pt}.'en/navigation/menu.json';
   my $options = {
 		 headers => {
 			     'X-Authentication' => $self->session,

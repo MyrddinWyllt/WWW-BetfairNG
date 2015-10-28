@@ -1097,7 +1097,7 @@ described below.
 
 =head3 createDeveloperAppKeys($parameters)
 
-  my $return_value = createDeveloperAppKeys(<application name>);
+  my $return_value = $bf->createDeveloperAppKeys(<application name>);
 
 Create two application keys for given user; one active and the other delayed. NOTE as this
 call fails if the keys have already been created, it has NOT BEEN TESTED.
@@ -1124,7 +1124,7 @@ sub createDeveloperAppKeys {
 
 =head3 getAccountDetails()
 
-  my $return_value = getAccountDetails();
+  my $return_value = $bf->getAccountDetails();
 
 Returns the details relating [to] your account, including your discount rate and Betfair
 point balance. Takes no parameters.
@@ -1153,7 +1153,7 @@ sub getAccountDetails {
 
 =head3 getAccountFunds()
 
-  my $return_value = getAccountFunds([$parameters]);
+  my $return_value = $bf->getAccountFunds([$parameters]);
 
 Get available to bet amount. The getAccounts service will return the
 UK wallet balance by default from either the UK or AUS Accounts API
@@ -1184,7 +1184,7 @@ sub getAccountFunds {
 
 =head3 getDeveloperAppKeys()
 
-  my $return_value = getDeveloperAppKeys();
+  my $return_value = $bf->getDeveloperAppKeys();
 
 Get all application keys owned by the given developer/vendor. Takes no parameters.
 
@@ -1204,7 +1204,7 @@ sub getDeveloperAppKeys {
 
 =head3 getAccountStatement([$parameters])
 
-  my $return_value = getAccountStatement();
+  my $return_value = $bf->getAccountStatement();
 
 Get Account Statement.
 
@@ -1234,7 +1234,7 @@ sub getAccountStatement {
 
 =head3 listCurrencyRates([$parameters])
 
-  my $return_value = listCurrencyRates();
+  my $return_value = $bf->listCurrencyRates();
 
 Returns a list of currency rates based on given currency.
 
@@ -1258,9 +1258,9 @@ sub listCurrencyRates {
 
 =head3 transferFunds($parameters)
 
-  my $return_value = transferFunds({from   => 'UK',
-                                    to     => 'AUSTRALIAN',
-                                    amount => <amount> });
+  my $return_value = $bf->transferFunds({from   => 'UK',
+                                         to     => 'AUSTRALIAN',
+                                         amount => <amount> });
 
 Transfer funds between the UK Exchange and Australian Exchange
 wallets. You require funds in the Australian Exchange wallet to bet on
@@ -2844,9 +2844,62 @@ Enumeration
 
 1;
 
+=head1 THREADS
 
+Because the betfair object maintains a persistent encrypted connection to the Betfair
+servers, it should NOT be considered 100% thread-safe. In particular, using the same $bf
+object to make API calls across different threads will usually result in disaster.
+In practice, there are at least two ways to solve this problem and use WWW::BetfairNG
+safely in threaded applications:-
 
+=head2 'Postbox' Thread
 
+If simultaneous or overlapping calls to betfair are not required, one solution is to make
+all calls from a single, dedicated thread. This thread can wait on a queue created by
+Thread::Queue for requests from other threads, and return the result to them, again
+via a queue. Only one $bf object is required in this scenario, which may be created by
+the 'postbox' thread itself or, less robustly, by the parent thread before the 'postbox'
+is spawned. In the latter case, no other thread (including the parent) should use the $bf
+object once the 'postbox' has started using it.
+
+=head2 Multiple Objects
+
+If you need to make simultaneous or overlapping calls to betfair, you can create a new $bf
+object in each thread that makes betfair calls. As betfair sessions are identified by a
+simple scalar session token, a single login will create a session which CAN be safely
+shared across threads:-
+
+  use WWW::BetfairNG;
+  use threads;
+  use threads::shared;
+
+  my $parent_bf = WWW::BetfairNG->new({
+                                       ssl_cert => '<path to ssl certificate file>',
+                                       ssl_key  => '<path to ssl key file>',
+                                       app_key  => '<application key value>',
+                                       });
+  $parent_bf->login({username => <username>, password => <password>})
+    or die;
+  my $session :shared = $parent_bf->session();
+
+  my $child = threads->create(sub {
+    # Create a new bf object in the child - no need for ssl cert and key
+    my $child_bf = WWW::BetfairNG->new({app_key  => '<application key value>'});
+    # Assign the shared session token - $child_bf will then be logged in
+    $child_bf->session($session);
+
+        # Make any required API calls in the child using $child_bf
+  });
+
+  # Freely make API calls using $parent_bf
+
+  $child->join;
+  $parent_bf->logout; # Logs out any children using the same session token
+  exit 0;
+
+In particular, keepAlive calls only need to be made in one thread to affect all threads
+using the same session token, and logging out in any thread will log out all threads
+using the same session token.
 
 =head1 SEE ALSO
 

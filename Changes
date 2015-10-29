@@ -1,15 +1,19 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.12  Thu Oct 29 18:00:00 2015
+        - Added support for the Australian exchange, Heartbeat API functions
+          and Race Status API functions.
+
 0.11  Sat Feb 28 23:50:00 2015
         - Extended timeout of navigationMenu method to 30 seconds, as busy days
           were causing this to fail. All other methods remain at 5 sec timeout.
 
 0.10  Sat Jan 31 15:12:00 2015
-        - Bug fixes to parameter checking code for Enumerations
+        - Bug fixes to parameter checking code for Enumerations.
 
 0.09  Sun Dec 07 14:38:00 2014
         - Added a parameter-checking method which does a full recursive
-          check of parameter names, existence and data types. (off by default)
+          check of parameter names, existence and data types. (off by default).
 
 0.08  Wed Oct 22 17:57:00 2014
         - Changed prerequisites versions and added IO::Socket::SSL
@@ -34,10 +38,10 @@ Revision history for Perl extension WWW::BetfairNG.
               marketType & numberofWinners.
 
 0.04  Tue Sep 09 01:36:00 2014
-        - Added Navigation Menu functionality
+        - Added Navigation Menu functionality.
 
 0.03  Sun Sep 07 01:57:00 2014
-        - Added a test suite
+        - Added a test suite.
 
 0.02  Mon Sep 01 17:12:00 2014
         - Added interactive login so SSL certificates are no longer necessary.

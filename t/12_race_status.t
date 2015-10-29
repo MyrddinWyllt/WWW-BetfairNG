@@ -1,26 +1,21 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 11;
+use Test::More tests => 9;
 
-# Tests of heartbeat methods NOT requiring internet connection
-# =============================================================
+# Tests of race status methods NOT requiring internet connection
+# ==============================================================
 
 # Load Module
 BEGIN { use_ok('WWW::BetfairNG') };
 # Create Object w/o attributes
 my $bf = new_ok('WWW::BetfairNG');
-# Check all heartbeat methods exist
+# Check all race status methods exist
 my %methods = (
-  heartbeat => ['PreferredTimeoutSeconds'],
+  listRaceDetails => [],
 );
 can_ok('WWW::BetfairNG', keys %methods);
 my %param_data = (
-  PreferredTimeoutSeconds => {
-	      name   => 'preferredTimeoutSeconds',
-	      value  => '30',
-	      errstr => 'preferredTimeoutSeconds is Required'
-	     }
 );
 foreach my $method (keys %methods) {
   my $params = {};

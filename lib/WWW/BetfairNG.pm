@@ -1439,8 +1439,44 @@ Return Value
 sub heartbeat {
   my $self = shift;
   my $params = shift || {};
-  my $url = BF_HRTBEAT_ENDPOINT . 'heartbeat';
+  my $url = BF_HRTBEAT_ENDPOINT;
   my $action = 'HeartbeatAPING/v1.0/heartbeat';
+  my $result = $self->_callRPC($url, $action, $params);
+  return $result;
+}
+
+=head2 Race Status API
+
+The listRaceDetails operation is provided to allow customers to establish the status of a
+horse race market both prior to and after the start of the race.  This information is
+available for UK and Ireland races only.
+
+=head3 listRaceDetails($parameters)
+
+  my $return_value = $bf->listRaceDetails();
+
+Search for races to get their details. 'meetingIds' optionally restricts the results to
+the specified meeting IDs. The unique Id for the meeting equivalent to the eventId for
+that specific race as returned by listEvents. 'raceIds' optionally restricts the results
+to the specified race IDs. The unique Id for the race in the format meetingid.raceTime
+(hhmm). raceTime is in UTC.
+
+Parameters
+
+  meetingIds     Array of Strings     OPT
+  raceIds        Array of Strings     OPT
+
+Return Value
+
+  ArrayRef       RaceDetails
+
+=cut
+
+sub listRaceDetails {
+  my $self = shift;
+  my $params = shift || {};
+  my $url = BF_RSTATUS_ENDPOINT;
+  my $action = 'ScoresAPING/v1.0/listRaceDetails';
   my $result = $self->_callRPC($url, $action, $params);
   return $result;
 }
@@ -1877,6 +1913,12 @@ sub _load_data_types {
 			allowed  => [qw//],
 		       },
 
+  listRaceDetails   => {
+			type     => 'HASH',
+			required => [qw//],
+			allowed  => [qw/meetingIds raceIds/],
+		       },
+
 # arrays
   betIds            => {
 			type     => 'ARRAY',
@@ -1946,6 +1988,14 @@ sub _load_data_types {
 			type     => 'ARRAY',
                         array_of => 'OrderStatus',
 		       },
+  meetingIds        => {
+			type     => 'ARRAY',
+                        array_of => 'meetingId',
+		       },
+  raceIds           => {
+			type     => 'ARRAY',
+                        array_of => 'raceId',
+		       },
   };
 
 # Common scalars
@@ -1995,6 +2045,12 @@ sub _load_data_types {
 	       type     => 'SCALAR',
 	       allowed  => qr/^\d{1,3}$/,
 	       example  => '180'
+			  };
+  $type_defs->{meetingId} = $type_defs->{eventId};
+  $type_defs->{raceId}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\d{8,10}\.(0[0-9]|1[0-9]|2[0-3])[0-5][0-9]$/,
+	       example  => '27292599.1430'
 			  };
 
 # betfair data types (all the following pod is still inside the _load_data_types sub)
@@ -2743,12 +2799,51 @@ Enumeration
 			  };
   $type_defs->{newPrice} = $double;
 
+=head3 RaceDetails
+
+  meetingId         String
+  raceId            String
+  raceStatus        RaceStatus
+  lastUpdated       Date
+  responseCode      ResponseCode
+
+=head3 RaceStatus
+
+Enumeration
+
+  DORMANT           There is no data available for this race
+  DELAYED           The start of the race has been delayed
+  PARADING          The horses are in the parade ring
+  GOINGDOWN         The horses are going down to the starting post
+  GOINGBEHIND       The horses are going behind the stalls
+  ATTHEPOST         The horses are at the post
+  UNDERORDERS       The horses are loaded into the stalls/race is about to start
+  OFF               The race has started
+  FINISHED          The race has finished
+  FALSESTART        There has been a false start
+  PHOTOGRAPH        The result of the race is subject to a photo finish
+  RESULT            The result of the race has been announced
+  WEIGHEDIN         The jockeys have weighed in
+  RACEVOID          The race has been declared void
+  ABANDONED         The meeting has been cancelled
+
 =head3 ReplaceInstructionReport
 
   status                  InstructionReportStatus
   errorCode               InstructionReportErrorCode
   cancelInstructionReport CancelInstructionReport
   placeInstructionReport  PlaceInstructionReport
+
+=head3 ResponseCode
+
+Enumeration
+
+  OK                                  Data returned successfully
+  NO_NEW_UPDATES                      No updates since the passes UpdateSequence
+  NO_LIVE_DATA_AVAILABLE              Event scores are no longer available
+  SERVICE_UNAVAILABLE                 Data feed for the event type is currently unavailable
+  UNEXPECTED_ERROR                    An unexpected error occurred retrieving score data
+  LIVE_DATA_TEMPORARILY_UNAVAILABLE   Live Data feed is temporarily unavailable
 
 =head3 RollupModel
 

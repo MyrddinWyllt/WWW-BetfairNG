@@ -346,8 +346,25 @@ SKIP: {
     ok($bf->heartbeat({preferredTimeoutSeconds => 0}),          "heartbeat");
     is($bf->response->{result}->{actionPerformed}, 'NONE',    	"actionPerformed");
     is($bf->response->{result}->{actualTimeoutSeconds},  0,    	"actualTimeout");
-    ok($bf->logout(),                                           "Log out");
-  }
+    # Race Details
+    ok($bf->listRaceDetails(),                                  "listRaceDetails");
+    for my $race (@{$bf->response->{result}}) {
+      ok(exists $race->{meetingId},                             "meetingId");
+      ok(exists $race->{raceId},                                "raceId");
+      ok(exists $race->{raceStatus},                            "raceStatus");
+      ok(exists $race->{lastUpdated},                           "lastUpdated");
+      ok(exists $race->{responseCode},                          "responseCode");
+    }
+    ok($bf->listRaceDetails({raceIds => [$bf->response->{result}->[0]->{raceId}]}),
+                                                                "listRaceDetails");
+    for my $race (@{$bf->response->{result}}) {
+      ok(exists $race->{meetingId},                             "meetingId");
+      ok(exists $race->{raceId},                                "raceId");
+      ok(exists $race->{raceStatus},                            "raceStatus");
+      ok(exists $race->{lastUpdated},                           "lastUpdated");
+      ok(exists $race->{responseCode},                          "responseCode");
+    }
+    ok($bf->logout(),                                           "Log out");  }
 }
 
 done_testing();

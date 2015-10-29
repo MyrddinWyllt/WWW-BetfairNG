@@ -15,6 +15,7 @@ t/07_navigation.t
 t/08_manifest.t
 t/09_pod-coverage.t
 t/10_pod.t
+t/11_heartbeat.t
 lib/WWW/BetfairNG.pm
 
 

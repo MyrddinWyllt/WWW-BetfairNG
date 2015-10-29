@@ -342,6 +342,10 @@ SKIP: {
 	}
       }
     }
+    # Heartbeat
+    ok($bf->heartbeat({preferredTimeoutSeconds => 0}),          "heartbeat");
+    is($bf->response->{result}->{actionPerformed}, 'NONE',    	"actionPerformed");
+    is($bf->response->{result}->{actualTimeoutSeconds},  0,    	"actualTimeout");
     ok($bf->logout(),                                           "Log out");
   }
 }

@@ -1401,6 +1401,50 @@ sub navigationMenu {
   return $self->response;
 }
 
+=head2 Heartbeat API
+
+This Heartbeat operation is provided to allow customers to automatically cancel their
+unmatched bets in the event of their API client losing connectivity with the Betfair API.
+The Heartbeat is not currently available for the Australian exchange.
+
+=head3 heartbeat($parameters)
+
+  my $return_value = $bf->heartbeat({preferredTimeoutSeconds => <timeout>});
+
+This heartbeat operation is provided to help customers have their positions managed
+automatically in the event of their API clients losing connectivity with the Betfair
+API. If a heartbeat request is not received within a prescribed time period, then Betfair
+will attempt to cancel all 'LIMIT' type bets for the given customer on the given
+exchange. There is no guarantee that this service will result in all bets being cancelled
+as there are a number of circumstances where bets are unable to be cancelled. Manual
+intervention is strongly advised in the event of a loss of connectivity to ensure that
+positions are correctly managed. If this service becomes unavailable for any reason, then
+your heartbeat will be unregistered automatically to avoid bets being inadvertently
+cancelled upon resumption of service. you should manage your position manually until the
+service is resumed. Heartbeat data may also be lost in the unlikely event of nodes failing
+within the cluster, which may result in your position not being managed until a subsequent
+heartbeat request is received.
+
+Parameters
+
+  preferredTimeoutSeconds  Integer      RQD
+
+Return Value
+
+  actionPerformed          ActionPerformed
+  actualTimeoutSeconds     Integer
+
+=cut
+
+sub heartbeat {
+  my $self = shift;
+  my $params = shift || {};
+  my $url = BF_HRTBEAT_ENDPOINT . 'heartbeat';
+  my $action = 'HeartbeatAPING/v1.0/heartbeat';
+  my $result = $self->_callRPC($url, $action, $params);
+  return $result;
+}
+
 #===============================#
 # Private Methods and Functions #
 #===============================#
@@ -1453,6 +1497,70 @@ sub _callAPI {
   return 0 unless ($content);
   $self->{response} = decode_json($content);
   return $self->{response};
+}
+
+# Called by Heartbeat and Race Status methods to do the talking to Betfair.
+# =========================================================================#
+#                                                                          #
+# (Betfair generally supports both a JSON-REST and a JSON-RPC interface to #
+# the API, and we use REST. However, Heartbeat and Race Status only allow  #
+# RPC, so we need a function for that as well.                             #
+#                                                                          #
+# =========================================================================#
+sub _callRPC {
+  my ($self, $url, $action, $params) = @_;
+  unless ($self->session){
+    $self->{error} = 'Not logged in';
+    return 0;
+  }
+  unless ($self->app_key){
+    $self->{error} = 'No application key set';
+    return 0;
+  }
+    unless(ref($params) eq 'HASH') {
+    $self->{error} = 'Parameters must be a hash ref or anonymous hash';
+    return 0;
+  }
+  if ($self->check_parameters) {
+    my ($method_name) = $action =~ /\/(\w+)$/;
+    return 0 unless $self->_check_parameter($method_name, $params);
+  }
+  my $post    = { params => $params, jsonrpc => "2.0", method => $action, id => 1};
+  my $options = {
+		 headers => {
+			     'X-Authentication' => $self->session,
+			     'X-Application'    => $self->app_key,
+			    },
+		 content => encode_json($post)
+		};
+  my $response = $self->{client}->post($url, $options);
+  unless ($response->{success}) {
+    if ($response->{status} == 400) {
+      my $content = $self->_gunzip($response->{content});
+      $self->{response} = decode_json($content);
+      $self->{error}  = $self->{response}->{detail}->{APINGException}->{errorCode} ||
+	$response->{status}.' '.$response->{reason}.' '.$response->{content};
+    }
+    else {
+      $self->{error}  = $response->{status}.' '.$response->{reason}.' '
+                       .$response->{content};
+    }
+    return 0;
+  }
+  my $content = $self->_gunzip($response->{content});
+  return 0 unless ($content);
+  $self->{response} = decode_json($content);
+  if ($self->{response}->{error}) {
+    $self->{error} = $self->{response}->{error}->{message};
+    return 0;
+  }
+  if ($self->{response}->{result}) {
+    return $self->{response}->{result};
+  }
+  else {
+    $self->{error} = "Empty reply";
+    return 0;
+  }
 }
 
 # HTTP::Tiny doesn't have built-in decompression so we do it here
@@ -1762,6 +1870,13 @@ sub _load_data_types {
 			required => [qw/from to amount/],
 			allowed  => [qw//],
 		       },
+
+  heartbeat         => {
+			type     => 'HASH',
+			required => [qw/preferredTimeoutSeconds/],
+			allowed  => [qw//],
+		       },
+
 # arrays
   betIds            => {
 			type     => 'ARRAY',
@@ -1876,6 +1991,11 @@ sub _load_data_types {
 	       allowed  => qr/^\d{1,10}$/,
 	       example  => '409999'
 			  };
+  $type_defs->{preferredTimeoutSeconds}  = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\d{1,3}$/,
+	       example  => '180'
+			  };
 
 # betfair data types (all the following pod is still inside the _load_data_types sub)
 # each type and any sub-types are loaded into the hash following their pod entry.
@@ -1890,6 +2010,17 @@ reached. Some elements of complex data types are required, while others are opti
 these are denoted by RQD and OPT respectively. Simple scalar type definitions (Long,
 Double, Integer, String, Boolean, Date) have been retained for convenience. 'Date' is
 a string in ISO 8601 format (e.g. '2007-04-05T14:30Z').
+
+=head3 ActionPerformed
+
+Enumeration
+
+  NONE                              No action was performed since last heartbeat
+  CANCELLATION_REQUEST_SUBMITTED    A request to cancel all unmatched bets was submitted
+  ALL_BETS_CANCELLED                All unmatched bets were cancelled since last heartbeat
+  SOME_BETS_NOT_CANCELLED           Not all unmatched bets were cancelled
+  CANCELLATION_REQUEST_ERROR        There was an error requesting cancellation
+  CANCELLATION_STATUS_UNKNOWN       There was no response from requesting cancellation
 
 =head3 BetStatus
 

@@ -24,11 +24,11 @@ WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
 
 =head1 VERSION
 
-Version 0.12
+Version 0.13
 
 =cut
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 =head1 SYNOPSIS
 
@@ -2027,7 +2027,7 @@ sub _load_data_types {
 			  };
   $type_defs->{runnerId}  = {
 	       type     => 'SCALAR',
-	       allowed  => qr/^\d{3,10}$/,
+	       allowed  => qr/^\d{1,10}$/,
 	       example  => '6750999'
 			  };
   $type_defs->{currencyCode}  = {
@@ -3140,9 +3140,10 @@ Myrddin Wyllt, E<lt>myrddinwyllt@tiscali.co.ukE<gt>
 
 Main inspiration for this was David Farrell's WWW::betfair module,
 which was written for the v6 SOAP interface. Thanks also to Carl
-O'Rourke for suggestions on clarifying error messages and Colin
+O'Rourke for suggestions on clarifying error messages, Colin
 Magee for the suggestion to extend the timeout period for the
-navigationMenu call.
+navigationMenu call and David Halstead for spotting a bug in the
+selectionId parameter check.
 
 =head1 COPYRIGHT AND LICENSE
 

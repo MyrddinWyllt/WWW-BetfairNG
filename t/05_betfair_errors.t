@@ -7,7 +7,8 @@ use Test::More;
 
 
 my $continue = 1;
-my $p = Net::Ping->new();
+my $p = Net::Ping->new('tcp');
+$p->port_number('80');
 $continue = 0 unless $p->ping('www.bbc.co.uk');
 $p->close();
 

@@ -15,8 +15,6 @@ use constant BF_KPALIVE_ENDPOINT => 'https://identitysso.betfair.com/api/keepAli
 use constant BF_ACCOUNT_ENDPOINT => 'https://api.betfair.com/exchange/account/rest/v1.0/';
 use constant BF_HRTBEAT_ENDPOINT => 'https://api.betfair.com/exchange/heartbeat/json-rpc/v1/';
 use constant BF_RSTATUS_ENDPOINT => 'https://api.betfair.com/exchange/scores/json-rpc/v1/';
-use constant AU_BETTING_ENDPOINT => 'https://api-au.betfair.com/exchange/betting/rest/v1.0/';
-use constant AU_ACCOUNT_ENDPOINT => 'https://api-au.betfair.com/exchange/account/rest/v1.0/';
 
 =head1 NAME
 
@@ -116,7 +114,6 @@ sub new {
     $self->{error}      = 'OK',
     $self->{response}   = {};
     $self->{p_check}    = 0;
-    $self->{australian} = 0;
     $self->{bet_end_pt} = BF_BETTING_ENDPOINT;
     $self->{acc_end_pt} = BF_ACCOUNT_ENDPOINT;
     $self->{data_types} = {};
@@ -124,7 +121,6 @@ sub new {
     my $client = HTTP::Tiny->new(
        timeout         => 5,
        agent           => "WWW::BetfairNG/$VERSION",
-       verify_SSL      => 1,
        default_headers => {'Content-Type'    => 'application/json',
 			   'Accept'          => 'application/json',
 			   'Accept-Encoding' => 'gzip'
@@ -246,38 +242,6 @@ sub check_parameters {
   return $self->{p_check};
 }
 
-=head3 australian()
-
-  my $is_aus = $bf->australian();
-  $bf->australian('<boolean>');
-
-Gets or sets a flag telling the object whether or not it should be talking to the Australian
-exchange. If this is set, all calls to Betting and Accounts Operations will be directed to
-the Australian exchange, which is a seperate entity hosted in Australia as required by
-Australian Government legislation. All bets on Australian horseracing markets must be made
-through this exchange, and a seperate 'wallet' is required to hold the stakes and returns.
-The default value is 'false', meaning that calls are directed to the UK exchange. Changing
-the value of 'australian' does NOT require you to log out and log back in, as the current
-session is maintained (in particular, 'keepAlive' still needs to be called with the same
-frequency). Currently, setting up a 'heartbeat' service will not affect bets placed on the
-Australian exchange, as this has not been implemented by Betfair.
-
-=cut
-
-sub australian {
-  my $self = shift;
-  if (@_){
-    my $current_state = $self->{australian};
-    my $flag = shift;
-    $self->{australian} = $flag ? 1 : 0;
-    unless ($self->{australian} == $current_state) {
-      $self->{bet_end_pt} = $self->{australian} ? AU_BETTING_ENDPOINT : BF_BETTING_ENDPOINT;
-      $self->{acc_end_pt} = $self->{australian} ? AU_ACCOUNT_ENDPOINT : BF_ACCOUNT_ENDPOINT;
-    }
-  }
-  return $self->{australian};
-}
-
 =head3 error()
 
   my $err_str = $bf->error();
@@ -390,7 +354,6 @@ sub login {
   $self->app_key('login') unless $got_app_key;
   my $login_client = HTTP::Tiny->new(
      agent           => "WWW::BetfairNG/$VERSION",
-     verify_SSL      => 1,
      SSL_options     => {
 			 'SSL_cert_file' => $self->ssl_cert,
 			 'SSL_key_file'  => $self->ssl_key,
@@ -447,7 +410,6 @@ sub interactiveLogin {
   $self->app_key('login') unless $got_app_key;
   my $login_client = HTTP::Tiny->new(
      agent           => "WWW::BetfairNG/$VERSION",
-     verify_SSL      => 1,
      default_headers => {'X-Application' => $self->app_key,
 			 'Accept'        => 'application/json',
 			});

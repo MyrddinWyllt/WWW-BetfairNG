@@ -58,7 +58,7 @@ JSON encoding / decoding can be achieved by installing:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2015 by Myrddin Wyllt
+Copyright (C) 2017 by Myrddin Wyllt
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself. (See the file LICENSE for

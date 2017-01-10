@@ -3235,7 +3235,7 @@ selectionId parameter check.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2015 by Myrddin Wyllt
+Copyright (C) 2017 by Myrddin Wyllt
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

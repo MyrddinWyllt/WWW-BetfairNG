@@ -1,5 +1,10 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.13  Tue Jan 10 15:00:00 2017
+        - Removed support for the Australian exchange, removed strict SSL check
+          for login, added minor changes to functionality and enumerations 
+          introduced by Betfair in August and October 2016.
+
 0.12  Thu Oct 29 18:00:00 2015
         - Added support for the Australian exchange, Heartbeat API functions
           and Race Status API functions.

@@ -55,7 +55,7 @@ is($bf->error(), "SSL Client Key Required",
 is($bf->ssl_key('keyfile'), 'keyfile',             "SSL key file added");
 ok(!$bf->login({username=>'username', password=>'password'}),
                                         "Login fails with invalid key and cert files");
-like($@, qr/SSL_cert_file certfile does not exist/, "Check invalid key and cert files");
+like($@, qr/SSL_cert_file certfile/,               "Check invalid key and cert files");
 # Test logout
 ok(!$bf->logout(),                                 "Logout fails with no session");
 is($bf->error(), "Not logged in",                  "No session error message OK");

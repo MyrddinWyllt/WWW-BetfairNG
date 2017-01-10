@@ -242,6 +242,33 @@ sub check_parameters {
   return $self->{p_check};
 }
 
+=head3 australian() *DEPRECATED*
+
+  my $is_aus = $bf->australian();
+  $bf->australian('<boolean>');
+
+Betfair previously used seperate URLs for Australian racing, and this method implemented
+the switching between those URLs. From 2016-09-20 the Australian exchange was integrated
+into the main exchange, making this method unnecessary. From 2017-01-04 calls to the
+Australian endpoints WILL NO LONGER WORK.
+
+The method has been retained in this version for backwards compatibility, but no longer
+changes the endpoints. It exists purely to avoid breaking existing third party code. If
+your application uses this method, you are STRONGLY RECOMMENDED to remove any references
+to it, as it will be removed in future versions.
+
+=cut
+
+sub australian {
+  my $self = shift;
+  if (@_){
+    my $current_state = $self->{australian};
+    my $flag = shift;
+    $self->{australian} = $flag ? 1 : 0;
+  }
+  return $self->{australian};
+}
+
 =head3 error()
 
   my $err_str = $bf->error();
@@ -583,14 +610,16 @@ fromRecord and recordCount parameters.
 
 Parameters
 
-  betIds            Array of Strings    OPT
-  marketIds         Array of Strings    OPT
-  orderProjection   OrderProjection     OPT
-  dateRange         TimeRange           OPT
-  orderBy           OrderBy             OPT
-  sortDir           SortDir             OPT
-  fromRecord        Integer             OPT
-  recordCount       Integer             OPT
+  betIds               Array of Strings    OPT
+  marketIds            Array of Strings    OPT
+  orderProjection      OrderProjection     OPT
+  customerOrderRefs    Array of Strings    OPT
+  customerStrategyRefs Array of Strings    OPT
+  dateRange            TimeRange           OPT
+  orderBy              OrderBy             OPT
+  sortDir              SortDir             OPT
+  fromRecord           Integer             OPT
+  recordCount          Integer             OPT
 
 Return Value
 
@@ -618,19 +647,21 @@ settled is listed first).
 
 Parameters
 
-  betStatus         BetStatus           RQD
-  eventTypeIds      Array of Strings    OPT
-  eventIds          Array of Strings    OPT
-  marketIds         Array of Strings    OPT
-  runnerIds         Array of Strings    OPT
-  betIds            Array of Strings    OPT
-  side              Side                OPT
-  settledDateRange  TimeRange           OPT
-  groupBy           GroupBy             OPT
-  includeItemDescription     Boolean    OPT
-  locale            String              OPT
-  fromRecord        Integer             OPT
-  recordCount       Integer             OPT
+  betStatus            	 BetStatus           RQD
+  eventTypeIds         	 Array of Strings    OPT
+  eventIds             	 Array of Strings    OPT
+  marketIds            	 Array of Strings    OPT
+  runnerIds            	 Array of Strings    OPT
+  betIds               	 Array of Strings    OPT
+  customerOrderRefs    	 Array of Strings    OPT
+  customerStrategyRefs 	 Array of Strings    OPT
+  side                 	 Side                OPT
+  settledDateRange     	 TimeRange           OPT
+  groupBy              	 GroupBy             OPT
+  includeItemDescription Boolean             OPT
+  locale               	 String              OPT
+  fromRecord           	 Integer             OPT
+  recordCount          	 Integer             OPT
 
 Return Value
 
@@ -709,16 +740,19 @@ times per second to a single marketId.
 
 Parameters
 
-  marketIds         Array of Strings    RQD
-  priceProjection   PriceProjection     OPT
-  orderProjection   OrderProjection     OPT
-  matchProjection   MatchProjection     OPT
-  currencyCode      String              OPT
-  locale            String              OPT
+  marketIds                     Array of Strings    RQD
+  priceProjection               PriceProjection     OPT
+  orderProjection               OrderProjection     OPT
+  matchProjection               MatchProjection     OPT
+  includeOverallPosition        Boolean             OPT
+  partitionMatchedByStrategyRef Boolean             OPT
+  customerStrategyRefs          Array of Strings    OPT
+  currencyCode                  String              OPT
+  locale                        String              OPT
 
 Return Value
 
-  Array Ref         MarketBook
+  Array Ref                     MarketBook
 
 =cut
 
@@ -891,16 +925,20 @@ apply to bets placed into the Italian Exchange.
 
 Parameters
 
-  marketId          String                      RQD
-  instructions      Array of PlaceInstruction   RQD
-  customerRef       String                      OPT
+  marketId            String                      RQD
+  instructions        Array of PlaceInstruction   RQD
+  customerRef         String                      OPT
+  marketVersion       MarketVersion               OPT
+  customerStrategyRef String                      OPT
+  async               Boolean                     OPT
+
 
 Return Value
 
-  customerRef       String
-  status            ExecutionReportStatus
-  errorCode         ExecutionReportErrorCode
-  marketId          String
+  customerRef         String
+  status              ExecutionReportStatus
+  errorCode           ExecutionReportErrorCode
+  marketId            String
   instructionReports  Array of PlaceInstructionReport
 
 =cut
@@ -976,6 +1014,8 @@ Parameters
   marketId          String                      RQD
   instructions      Array of ReplaceInstruction RQD
   customerRef       String                      OPT
+  marketVersion     MarketVersion               OPT
+  async             Boolean                     OPT
 
 Return Value
 
@@ -1117,13 +1157,13 @@ sub getAccountDetails {
 
   my $return_value = $bf->getAccountFunds([$parameters]);
 
-Get available to bet amount. The getAccounts service will return the
-UK wallet balance by default from either the UK or AUS Accounts API
-endpoint if the wallet parameter is not specified.
+Get available to bet amount. The optional parameter 'wallet' was
+previously used to access Australian funds, but since 2016-09-20
+these have been included in the main (UK) wallet.
 
 Parameters
 
-  wallet            Wallet    OPT
+  wallet            Wallet    OPT - DEPRECATED
 
 Return Value
 
@@ -1218,15 +1258,16 @@ sub listCurrencyRates {
   return $result;
 }
 
-=head3 transferFunds($parameters)
+=head3 transferFunds($parameters) - DEPRECATED
 
   my $return_value = $bf->transferFunds({from   => 'UK',
                                          to     => 'AUSTRALIAN',
                                          amount => <amount> });
 
-Transfer funds between the UK Exchange and Australian Exchange
-wallets. You require funds in the Australian Exchange wallet to bet on
-Australian markets.
+Transfer funds between different wallets.  With the removal of the Australian
+wallet on 2016-09-20 this method is currently DEPRECATED, although it has been
+retained as the introduction of alternative wallets for ringfencing funds etc.
+has been mooted by Betfair on the forum.
 
 Parameters
 
@@ -1313,7 +1354,7 @@ Menu Entity Types
 
   MARKET
 
-  exchangeId        String ('1' for GB & R of W, '2' for AUS)
+  exchangeId        String (Currently always '1')
   id                String, will be the same as Market id
   marketStartTime   Date
   marketType        MarketType (e.g. 'WIN', 'PLACE')
@@ -1367,7 +1408,6 @@ sub navigationMenu {
 
 This Heartbeat operation is provided to allow customers to automatically cancel their
 unmatched bets in the event of their API client losing connectivity with the Betfair API.
-The Heartbeat is not currently available for the Australian exchange.
 
 =head3 heartbeat($parameters)
 
@@ -1726,25 +1766,29 @@ sub _load_data_types {
   my $type_defs = {
 
 # simple types
-  amount                 => $double,
-  fromRecord             => $integer,
-  recordCount            => $integer,
-  maxResults             => $integer,
-  customerRef            => $string,
-  appName                => $string,
-  textQuery              => $string,
-  venue                  => $string,
-  exchangeId             => $string, # for now, until this feature is implemented
-  marketTypeCode         => $string, # for now, until Betfair publish an Enum
-  includeItemDescription => $boolean,
-  includeSettledBets     => $boolean,
-  includeBspBets         => $boolean,
-  netOfCommission        => $boolean,
-  bspOnly                => $boolean,
-  turnInPlayEnabled      => $boolean,
-  inPlayOnly             => $boolean,
-  from                   => $date,
-  to                     => $date,
+  version                       => $long,
+  amount                        => $double,
+  fromRecord                    => $integer,
+  recordCount                   => $integer,
+  maxResults                    => $integer,
+  customerRef                   => $string,
+  appName                       => $string,
+  textQuery                     => $string,
+  venue                         => $string,
+  exchangeId                    => $string, # for now, until this feature is implemented
+  marketTypeCode                => $string, # for now, until Betfair publish an Enum
+  includeItemDescription        => $boolean,
+  includeSettledBets            => $boolean,
+  includeBspBets                => $boolean,
+  netOfCommission               => $boolean,
+  bspOnly                       => $boolean,
+  turnInPlayEnabled             => $boolean,
+  inPlayOnly                    => $boolean,
+  async                         => $boolean,
+  includeOverallPosition        => $boolean,
+  partitionMatchedByStrategyRef => $boolean,
+  from                          => $date,
+  to                            => $date,
 
 # method names
   listCompetitions  => {
@@ -1761,6 +1805,7 @@ sub _load_data_types {
 			type     => 'HASH',
 			required => [qw//],
 			allowed  => [qw/betIds marketIds orderProjection dateRange
+                                        customerOrderRefs customerStrategyRefs
 					orderBy sortDir fromRecord recordCount/],
 		       },
   listClearedOrders => {
@@ -1768,6 +1813,7 @@ sub _load_data_types {
 			required => [qw/betStatus/],
 			allowed  => [qw/eventTypeIds eventIds marketIds runnerIds
 				        betIds side settledDateRange groupBy locale
+                                        customerOrderRefs customerStrategyRefs
 				        includeItemDescription fromRecord recordCount/],
 		       },
   listEvents        => {
@@ -1784,6 +1830,8 @@ sub _load_data_types {
 			type     => 'HASH',
 			required => [qw/marketIds/],
 			allowed  => [qw/priceProjection orderProjection matchProjection
+                                        includeOverallPosition partitionMatchedByStrategyRef
+                                        customerOrderRefs customerStrategyRefs
                                         currencyCode locale/],
 		       },
   listMarketCatalogue => {
@@ -1815,7 +1863,8 @@ sub _load_data_types {
   placeOrders       => {
 			type     => 'HASH',
 			required => [qw/marketId instructions/],
-			allowed  => [qw/customerRef/],
+			allowed  => [qw/customerRef marketVersion
+                                        customerOrderRef customerStrategyRef async/],
 		       },
   cancelOrders      => {
 			type     => 'HASH',
@@ -1825,7 +1874,7 @@ sub _load_data_types {
   replaceOrders     => {
 			type     => 'HASH',
 			required => [qw/marketId instructions/],
-			allowed  => [qw/customerRef/],
+			allowed  => [qw/customerRef marketVersion async/],
 		       },
   updateOrders      => {
 			type     => 'HASH',
@@ -1958,6 +2007,14 @@ sub _load_data_types {
 			type     => 'ARRAY',
                         array_of => 'raceId',
 		       },
+  customerStrategyRefs => {
+			type     => 'ARRAY',
+                        array_of => 'customerStrategyRef',
+		       },
+  customerOrderRefs => {
+			type     => 'ARRAY',
+                        array_of => 'customerOrderRef',
+		       },
   };
 
 # Common scalars
@@ -2014,6 +2071,17 @@ sub _load_data_types {
 	       allowed  => qr/^\d{8,10}\.(0[0-9]|1[0-9]|2[0-3])[0-5][0-9]$/,
 	       example  => '27292599.1430'
 			  };
+  $type_defs->{customerStrategyRef} = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\w{1,15}$/,
+	       example  => 'SVM_Place_01'
+			  };
+  $type_defs->{customerOrderRef} = {
+	       type     => 'SCALAR',
+	       allowed  => qr/^\w{1,15}$/,
+	       example  => 'ORD_42251b'
+			  };
+
 
 # betfair data types (all the following pod is still inside the _load_data_types sub)
 # each type and any sub-types are loaded into the hash following their pod entry.
@@ -2055,7 +2123,23 @@ Enumeration
 			      type     => 'ENUM',
 			      allowed  => [qw/SETTLED VOIDED LAPSED CANCELLED/],
 			     };
-  $type_defs->{betStatus} = $type_defs->{BetStatus};
+  $type_defs->{betStatus}  = $type_defs->{BetStatus};
+
+=head3 BetTargetType
+
+Enumeration
+
+
+  BACKERS_PROFIT The payout requested minus the size at which this LimitOrder is to be placed.
+  PAYOUT         The total payout requested on a LimitOrder.
+
+=cut
+
+  $type_defs->{BetTargetType}  = {
+				  type     => 'ENUM',
+				  allowed  => [qw/BACKERS_PROFIT PAYOUT/],
+				 };
+  $type_defs->{betTargetType}  = $type_defs->{BetTargetType};
 
 =head3 CancelInstruction
 
@@ -2351,19 +2435,27 @@ Enumeration
 
 =head3 LimitOrder
 
-  size              Double              REQ
+  size              Double              REQ/OPT*
   price             Double              REQ
   persistenceType   PersistenceType     REQ
+  timeInForce       TimeInForce         OPT
+  minFillSize       Double              OPT
+  betTargetType     BetTargetType       OPT/REQ*
+  betTargetSize     Double              OPT/REQ*
+
+  * Must specify EITHER size OR target type and target size
 
 =cut
 
   $type_defs->{LimitOrder}  = {
      	       type     => 'HASH',
-               required => [qw/size price persistenceType/],
-	       allowed  => [qw//],
+               required => [qw/price persistenceType/],
+	       allowed  => [qw/size timeInForce minFillSize betTargetType betTargetSize/],
 			      };
-  $type_defs->{size}    = $double;
-  $type_defs->{limitOrder}  = $type_defs->{LimitOrder};
+  $type_defs->{size}          = $double;
+  $type_defs->{minFillSize}   = $double;
+  $type_defs->{betTargetSize} = $double;
+  $type_defs->{limitOrder}    = $type_defs->{LimitOrder};
 
 =head3 MarketBettingType
 
@@ -2546,6 +2638,19 @@ Enumeration
   marketType        String
   marketCount       Integer
 
+=head3 MarketVersion
+
+  version           Long                REQ
+
+=cut
+
+  $type_defs->{MarketVersion}  = {
+				  type     => 'HASH',
+				  required => [qw/version/],
+				  allowed  => [qw//],
+				 };
+  $type_defs->{marketVersion}  = $type_defs->{MarketVersion};
+
 =head3 Match
 
   betId             String
@@ -2629,8 +2734,10 @@ Enumeration
 
 Enumeration
 
+  PENDING            An asynchronous order is yet to be processed. NOT A VALID SEARCH CRITERIA.
   EXECUTION_COMPLETE An order that does not have any remaining unmatched portion.
   EXECUTABLE         An order that has a remaining unmatched portion.
+  EXPIRED            Unfilled FILL_OR_KILL order. NOT A VALID SEARCH CRITERIA.
 
 =cut
 
@@ -2788,6 +2895,11 @@ Enumeration
   WEIGHEDIN         The jockeys have weighed in
   RACEVOID          The race has been declared void
   ABANDONED         The meeting has been cancelled
+  APPROACHING       The greyhounds are approaching the traps
+  GOING IN TRAPS    The greyhounds are being put in the traps
+  HARERUNNING       The hare has been started
+  NORACE            The race has been declared a no race
+  RERUN             The race will be rerun
 
 =head3 ReplaceInstructionReport
 
@@ -2956,6 +3068,20 @@ Enumeration
 				   };
   $type_defs->{granularity}  = $type_defs->{TimeGranularity};
 
+=head3 TimeInForce
+
+Enumeration
+
+  FILL_OR_KILL Execute the transaction immediately  or not at all.
+
+=cut
+
+  $type_defs->{TimeInForce}  = {
+				type     => 'ENUM',
+				allowed  => [qw/FILL_OR_KILL/],
+			       };
+  $type_defs->{timeInForce}  = $type_defs->{TimeInForce};
+
 =head3 TimeRange
 
   from              Date      OPT
@@ -3002,7 +3128,7 @@ Enumeration
 Enumeration
 
   UK                UK Exchange wallet.
-  AUSTRALIAN        Australian Exchange wallet.
+  AUSTRALIAN        Australian Exchange wallet. DEPRECATED
 
 =cut
 

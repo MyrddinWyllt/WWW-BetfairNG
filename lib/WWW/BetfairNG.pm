@@ -1450,8 +1450,8 @@ sub heartbeat {
 =head2 Race Status API
 
 The listRaceDetails operation is provided to allow customers to establish the status of a
-horse race market both prior to and after the start of the race.  This information is
-available for UK and Ireland races only.
+horse or greyhound race market both prior to and after the start of the race.  This
+information is available for UK and Ireland races only.
 
 =head3 listRaceDetails($parameters)
 
@@ -2078,7 +2078,7 @@ sub _load_data_types {
 			  };
   $type_defs->{customerOrderRef} = {
 	       type     => 'SCALAR',
-	       allowed  => qr/^\w{1,15}$/,
+	       allowed  => qr/^\w{1,32}$/,
 	       example  => 'ORD_42251b'
 			  };
 
@@ -2794,7 +2794,8 @@ Enumeration
   $type_defs->{PlaceInstruction}  = {
      	       type     => 'HASH',
                required => [qw/orderType selectionId side/],
-	       allowed  => [qw/handicap limitOrder limitOnCloseOrder marketOnCloseOrder/],
+	       allowed  => [qw/handicap limitOrder limitOnCloseOrder
+                               marketOnCloseOrder customerOrderRef/],
 				    };
   $type_defs->{selectionId}  = $type_defs->{runnerId};
   $type_defs->{handicap}     = $double;
@@ -2896,8 +2897,9 @@ Enumeration
   RACEVOID          The race has been declared void
   ABANDONED         The meeting has been cancelled
   APPROACHING       The greyhounds are approaching the traps
-  GOING IN TRAPS    The greyhounds are being put in the traps
+  GOINGINTRAPS      The greyhounds are being put in the traps
   HARERUNNING       The hare has been started
+  FINALRESULT       The result cannot be changed for betting purposes.
   NORACE            The race has been declared a no race
   RERUN             The race will be rerun
 
@@ -2972,15 +2974,16 @@ Enumeration
   ACTIVE            Active in a live market.
   WINNER            Winner in a settled market.
   LOSER             Loser in a settled market.
-  REMOVED_VACANT    Vacant (e.g. Trap in a dog race)
+  PLACED            The runner was placed, applies to EACH_WAY marketTypes only.
+  REMOVED_VACANT    Vacant (e.g. Trap in a dog race).
   REMOVED           Removed from the market.
-  HIDDEN            Hidden from the market
+  HIDDEN            Hidden from the market.
 
 =cut
 
   $type_defs->{RunnerStatus}  = {
      	       type     => 'ENUM',
-	       allowed  => [qw/ACTIVE WINNER LOSER REMOVED_VACANT REMOVED HIDDEN/],
+	       allowed  => [qw/ACTIVE WINNER LOSER PLACED REMOVED_VACANT REMOVED HIDDEN/],
 				};
 
 =head3 Side

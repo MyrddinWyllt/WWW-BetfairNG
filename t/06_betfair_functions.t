@@ -213,6 +213,38 @@ SKIP: {
 	ok(exists $runner->{ex},                               "exchange");
       }
     }
+    # New call 'listRunnerBook' introduced on 2017-03-28 so it's tested here on 1st horse
+    # It returns an array of MarketBook so the tests are the same as for 'listMarketBook'
+    my $selection_id = $runners->[0]->{selectionId};
+    $params = {marketId => $market_id, selectionId => $selection_id};
+    $params->{priceProjection} = {priceData => ['EX_BEST_OFFERS']};
+    ok($bf->listRunnerBook($params),                            "listRunnerBook");
+    for my $market (0..@{$bf->response}-1) {
+      ok(exists $bf->response->[$market]->{marketId},             "marketId");
+      ok(exists $bf->response->[$market]->{isMarketDataDelayed},  "isMarketDataDelayed");
+      ok(exists $bf->response->[$market]->{status},               "status");
+      ok(exists $bf->response->[$market]->{betDelay},             "betDelay");
+      ok(exists $bf->response->[$market]->{bspReconciled},        "bspReconciled");
+      ok(exists $bf->response->[$market]->{complete},             "complete");
+      ok(exists $bf->response->[$market]->{inplay},               "inplay");
+      ok(exists $bf->response->[$market]->{numberOfWinners},      "numberOfWinners");
+      ok(exists $bf->response->[$market]->{numberOfRunners},      "numberOfRunners");
+      ok(exists $bf->response->[$market]->{numberOfActiveRunners},"numberOfActiveRunners");
+      #     ok(exists $bf->response->[$market]->{lastMatchTime},        "lastMatchTime");
+      ok(exists $bf->response->[$market]->{totalMatched},         "totalMatched");
+      ok(exists $bf->response->[$market]->{totalAvailable},       "totalAvailable");
+      ok(exists $bf->response->[$market]->{crossMatching},        "crossMatching");
+      ok(exists $bf->response->[$market]->{runnersVoidable},      "runnersVoidable");
+      ok(exists $bf->response->[$market]->{version},              "version");
+      ok(exists $bf->response->[$market]->{runners},              "runners");
+      foreach my $runner (@{$bf->response->[$market]->{runners}}) {
+	ok(exists $runner->{selectionId},                      "selectionId");
+	ok(exists $runner->{handicap},                         "handicap");
+	ok(exists $runner->{status},                           "status");
+	#       ok(exists $runner->{adjustmentFactor},                 "adjustmentFactor");
+	ok(exists $runner->{ex},                               "exchange");
+      }
+    }
     $params = {};
     $params->{marketId} = $market_id;
     my $instructions = [];

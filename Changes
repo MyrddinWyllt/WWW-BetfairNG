@@ -1,5 +1,9 @@
 Revision history for Perl extension WWW::BetfairNG.
 
+0.14  Thu Apr 06 19:00:00 2017
+        - Added support for the 'listRunnerBook' method introduced by Betfair
+          on 2017-03-28.
+
 0.13  Tue Jan 10 15:00:00 2017
         - Removed support for the Australian exchange, removed strict SSL check
           for login, added minor changes to functionality and enumerations 

@@ -22,11 +22,11 @@ WWW::BetfairNG - Object-oriented Perl interface to the Betfair JSON API
 
 =head1 VERSION
 
-Version 0.13
+Version 0.14
 
 =cut
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 =head1 SYNOPSIS
 
@@ -760,6 +760,48 @@ sub listMarketBook {
   my $self = shift;
   my $params = shift || {};
   my $url = $self->{bet_end_pt}.'listMarketBook/';
+  my $result = $self->_callAPI($url, $params);
+  return $result;
+}
+
+=head3 listRunnerBook($parameters)
+
+  my $return_value = $bf->listRunnerBook({marketId    => <market id>,
+                                          selectionId => <selection id>});
+
+Returns a list of dynamic data about a market and a specified runner. Dynamic data
+includes prices, the status of the market, the status of selections, the traded volume,
+and the status of any orders you have placed in the market.  You can only pass in one
+marketId and one selectionId in that market per request. If the selectionId being passed
+in is not a valid one / doesn't belong in that market then the call will still work but
+only the market data is returned.
+
+Parameters
+
+  marketId                      String              RQD
+  selectionId                   Long                RQD
+  handicap                      Double              OPT
+  priceProjection               PriceProjection     OPT
+  orderProjection               OrderProjection     OPT
+  matchProjection               MatchProjection     OPT
+  includeOverallPosition        Boolean             OPT
+  partitionMatchedByStrategyRef Boolean             OPT
+  customerStrategyRefs          Array of Strings    OPT
+  currencyCode                  String              OPT
+  locale                        String              OPT
+  matchedSince                  Date                OPT
+  betIds                        Array of Strings    OPT
+
+Return Value
+
+  Array Ref                     MarketBook
+
+=cut
+
+sub listRunnerBook {
+  my $self = shift;
+  my $params = shift || {};
+  my $url = $self->{bet_end_pt}.'listRunnerBook/';
   my $result = $self->_callAPI($url, $params);
   return $result;
 }
@@ -1756,7 +1798,7 @@ sub _load_data_types {
   };
  my $date = {
     type     => 'SCALAR',
-    allowed  => qr/^\d\d\d\d-\d\d-\d\d[T ]\d\d:\d\dZ$/,
+    allowed  => qr/^\d\d\d\d-\d\d-\d\d[T ]\d\d:\d\d(:\d\d)?Z?$/,
     example  => '2007-04-05T14:30Z'
   };
 
@@ -1789,6 +1831,7 @@ sub _load_data_types {
   partitionMatchedByStrategyRef => $boolean,
   from                          => $date,
   to                            => $date,
+  matchedSince                  => $date,
 
 # method names
   listCompetitions  => {
@@ -1830,9 +1873,19 @@ sub _load_data_types {
 			type     => 'HASH',
 			required => [qw/marketIds/],
 			allowed  => [qw/priceProjection orderProjection matchProjection
-                                        includeOverallPosition partitionMatchedByStrategyRef
+                                        includeOverallPosition
+                                        partitionMatchedByStrategyRef
                                         customerOrderRefs customerStrategyRefs
                                         currencyCode locale/],
+		       },
+  listRunnerBook    => {
+			type     => 'HASH',
+			required => [qw/marketId selectionId/],
+			allowed  => [qw/priceProjection orderProjection matchProjection
+                                        includeOverallPosition
+                                        partitionMatchedByStrategyRef
+                                        customerOrderRefs customerStrategyRefs
+                                        currencyCode locale matchedSince betIds/],
 		       },
   listMarketCatalogue => {
 			type     => 'HASH',
@@ -2963,7 +3016,7 @@ Enumeration
 
 =head3 RunnerProfitAndLoss
 
-  selectionId       String
+  selectionId       Long
   ifWin             Double
   ifLose            Double
 
@@ -3221,7 +3274,7 @@ using the same session token.
 =head1 SEE ALSO
 
 The Betfair Developer's Website L<https://developer.betfair.com/>
-In particular, the Sports API Documentation and the Forum.
+In particular, the Exchange API Documentation and the Forum.
 
 =head1 AUTHOR
 

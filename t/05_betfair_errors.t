@@ -24,6 +24,7 @@ plan( skip_all => "No internet connection found") unless $continue;
   listEvents               => ['MarketFilter'],
   listEventTypes           => ['MarketFilter'],
   listMarketBook           => ['MarketIds'],
+  listRunnerBook           => ['MarketId', 'SelectionId'],
   listMarketCatalogue      => ['MarketFilter', 'MaxResults'],
   listMarketProfitAndLoss  => ['MarketIds'],
   listMarketTypes          => ['MarketFilter'],
@@ -72,6 +73,11 @@ plan( skip_all => "No internet connection found") unless $continue;
 			  name   => 'marketId',
 			  value  => '1.111111',
 			  errstr => 'Market Id is Required'
+			 },
+  SelectionId         => {
+			  name   => 'selectionId',
+			  value  => '6750999',
+			  errstr => 'Selection Id is Required'
 			 },
   PlaceInstructions   => {
 			  name   => 'instructions',
@@ -143,7 +149,7 @@ plan( skip_all => "No internet connection found") unless $continue;
     ok(!$bf->$method($params), "Call $method");
     if (grep {$_ eq $method} qw/listCountries placeOrders listEventTypes listVenues
 			       listEvents listCurrentOrders listMarketBook
-			       listMarketProfitAndLoss
+			       listRunnerBook listMarketProfitAndLoss
 			       listCompetitions listClearedOrders cancelOrders
 			       listMarketTypes listTimeRanges listMarketCatalogue/) {
       like($bf->error, qr/^INVALID_/,      "Bad app key or session error message");

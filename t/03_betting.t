@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use WWW::BetfairNG;
-use Test::More tests => 135;
+use Test::More tests => 145;
 
 # Tests of betting methods NOT requiring internet connection
 # ==========================================================
@@ -19,6 +19,7 @@ my %methods = (
   listEvents               => ['MarketFilter'],
   listEventTypes           => ['MarketFilter'],
   listMarketBook           => ['MarketIds'],
+  listRunnerBook           => ['MarketId', 'SelectionId'],
   listMarketCatalogue      => ['MarketFilter', 'MaxResults'],
   listMarketProfitAndLoss  => ['MarketIds'],
   listMarketTypes          => ['MarketFilter'],
@@ -61,6 +62,11 @@ my %param_data = (
 			  name   => 'marketId',
 			  value  => '1.111111',
 			  errstr => 'Market Id is Required'
+			 },
+  SelectionId         => {
+			  name   => 'selectionId',
+			  value  => '6750999',
+			  errstr => 'Selection Id is Required'
 			 },
   PlaceInstructions   => {
 			  name   => 'instructions',
